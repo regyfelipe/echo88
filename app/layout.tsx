@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Echo88 - Bem-vindo",
   description: "Plataforma de autenticação e cadastro",
+  other: {
+    "google-adsense-account": "ca-pub-3354164597487551",
+  },
 };
 
 export default function RootLayout({
