@@ -125,7 +125,7 @@ export function PostDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-300"
+      className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-300 p-0 sm:p-4"
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -133,42 +133,43 @@ export function PostDetailModal({
 
       {/* Modal Content - Estilo Instagram */}
       <div
-        className="relative w-full max-w-5xl max-h-[100vh] sm:max-h-[95vh] bg-background overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col md:flex-row"
+        className="relative w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-5xl bg-background overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col md:flex-row sm:rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2 right-2 sm:top-4 sm:right-4 z-50 size-10 sm:size-11 bg-black/50 backdrop-blur-md hover:bg-black/70 text-white rounded-full shadow-lg transition-all hover:scale-110 border-0 touch-manipulation"
+          className="absolute top-2 right-2 sm:top-4 sm:right-4 z-50 size-9 sm:size-10 md:size-11 bg-black/50 backdrop-blur-md hover:bg-black/70 active:bg-black/80 text-white rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border-0 touch-manipulation"
           onClick={onClose}
         >
-          <HugeiconsIcon icon={CancelCircleIcon} className="size-5" />
+          <HugeiconsIcon icon={CancelCircleIcon} className="size-4 sm:size-5" />
         </Button>
 
         {/* Media Display - Lado esquerdo (desktop) ou topo (mobile) */}
-        <div className="relative w-full md:w-[60%] bg-black flex items-center justify-center aspect-square sm:aspect-square md:aspect-auto md:min-h-[95vh] max-h-[50vh] sm:max-h-[60vh] md:max-h-none">
+        <div className="relative w-full md:w-[60%] lg:w-[65%] bg-black flex items-center justify-center min-h-[40vh] sm:min-h-[50vh] md:min-h-[95vh] max-h-[60vh] sm:max-h-[70vh] md:max-h-[95vh] overflow-hidden">
           {isVideo ? (
             <div className="relative w-full h-full flex items-center justify-center">
               <video
                 src={currentMedia?.url || media?.url}
                 poster={currentMedia?.thumbnail || media?.thumbnail}
-                className="w-full h-full max-h-[95vh] object-contain"
+                className="w-full h-full object-contain"
                 controls
                 autoPlay={isVideoPlaying}
                 onPlay={() => setIsVideoPlaying(true)}
                 onPause={() => setIsVideoPlaying(false)}
+                playsInline
               />
               {!isVideoPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                   <Button
                     size="lg"
-                    className="size-16 rounded-full bg-white/90 backdrop-blur-md hover:bg-white shadow-xl transition-all hover:scale-110"
+                    className="size-14 sm:size-16 md:size-20 rounded-full bg-white/90 backdrop-blur-md hover:bg-white active:bg-white/80 shadow-xl transition-all hover:scale-110 active:scale-95 touch-manipulation"
                     onClick={() => setIsVideoPlaying(true)}
                   >
                     <HugeiconsIcon
                       icon={PlayIcon}
-                      className="size-8 ml-1 text-black"
+                      className="size-7 sm:size-8 md:size-10 ml-1 text-black"
                     />
                   </Button>
                 </div>
@@ -178,7 +179,8 @@ export function PostDetailModal({
             <img
               src={currentMedia?.url || media?.url}
               alt={content || "Post image"}
-              className="w-full h-full object-contain max-h-[95vh]"
+              className="w-full h-full object-contain"
+              loading="eager"
             />
           )}
 
@@ -189,34 +191,41 @@ export function PostDetailModal({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 size-11 sm:size-12 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white rounded-full shadow-xl transition-all hover:scale-110 border-0 touch-manipulation"
+                  className="absolute left-2 sm:left-3 md:left-4 top-1/2 -translate-y-1/2 size-10 sm:size-11 md:size-12 bg-white/20 backdrop-blur-md hover:bg-white/30 active:bg-white/40 text-white rounded-full shadow-xl transition-all hover:scale-110 active:scale-95 border-0 touch-manipulation z-10"
                   onClick={prevMedia}
                 >
-                  <HugeiconsIcon icon={ArrowLeft01Icon} className="size-5" />
+                  <HugeiconsIcon
+                    icon={ArrowLeft01Icon}
+                    className="size-4 sm:size-5"
+                  />
                 </Button>
               )}
               {currentMediaIndex < gallery!.length - 1 && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 size-11 sm:size-12 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white rounded-full shadow-xl transition-all hover:scale-110 border-0 touch-manipulation"
+                  className="absolute right-2 sm:right-3 md:right-4 top-1/2 -translate-y-1/2 size-10 sm:size-11 md:size-12 bg-white/20 backdrop-blur-md hover:bg-white/30 active:bg-white/40 text-white rounded-full shadow-xl transition-all hover:scale-110 active:scale-95 border-0 touch-manipulation z-10"
                   onClick={nextMedia}
                 >
-                  <HugeiconsIcon icon={ArrowRight01Icon} className="size-5" />
+                  <HugeiconsIcon
+                    icon={ArrowRight01Icon}
+                    className="size-4 sm:size-5"
+                  />
                 </Button>
               )}
               {/* Gallery dots indicator */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 px-2 py-1.5 bg-black/50 backdrop-blur-md rounded-full">
+              <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 px-2 py-1.5 bg-black/50 backdrop-blur-md rounded-full z-10">
                 {gallery?.map((_, index) => (
                   <button
                     key={index}
                     className={cn(
-                      "rounded-full transition-all duration-300",
+                      "rounded-full transition-all duration-300 touch-manipulation",
                       index === currentMediaIndex
-                        ? "bg-white w-2 h-2"
-                        : "bg-white/40 w-1.5 h-1.5 hover:bg-white/60"
+                        ? "bg-white w-2 h-2 sm:w-2.5 sm:h-2.5"
+                        : "bg-white/40 w-1.5 h-1.5 sm:w-2 sm:h-2 hover:bg-white/60 active:bg-white/50"
                     )}
                     onClick={() => setCurrentMediaIndex(index)}
+                    aria-label={`Go to image ${index + 1}`}
                   />
                 ))}
               </div>
@@ -225,15 +234,16 @@ export function PostDetailModal({
         </div>
 
         {/* Info Section - Lado direito (desktop) ou abaixo (mobile) - Estilo Instagram */}
-        <div className="flex-1 w-full md:w-[40%] flex flex-col max-h-[50vh] sm:max-h-[60vh] md:max-h-[95vh] overflow-hidden">
+        <div className="flex-1 w-full md:w-[40%] lg:w-[35%] flex flex-col min-h-0 overflow-hidden">
           {/* Header com autor */}
-          <div className="flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border shrink-0">
-            <div className="size-9 sm:size-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border shrink-0">
+            <div className="size-8 sm:size-9 md:size-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
               {author.avatar ? (
                 <img
                   src={author.avatar}
                   alt={author.name}
                   className="size-full object-cover"
+                  loading="lazy"
                 />
               ) : (
                 <span className="text-primary font-semibold text-xs sm:text-sm">
@@ -247,27 +257,27 @@ export function PostDetailModal({
               </p>
             </div>
             {category && (
-              <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded-md shrink-0">
+              <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded-md shrink-0 hidden sm:inline-block">
                 {category.name}
               </span>
             )}
           </div>
 
           {/* Scrollable content area */}
-          <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-2.5 sm:py-3 space-y-2 sm:space-y-3">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-4 py-2.5 sm:py-3 space-y-2 sm:space-y-3 custom-scrollbar">
             {/* Content */}
             {content && (
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
-                  <span className="text-sm font-semibold shrink-0">
+                  <span className="text-sm sm:text-base font-semibold shrink-0">
                     {author.username}
                   </span>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm sm:text-base text-foreground leading-relaxed whitespace-pre-wrap">
                     {content}
                   </p>
                 </div>
                 {timeAgo && (
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                  <p className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wide">
                     {timeAgo}
                   </p>
                 )}
@@ -276,23 +286,24 @@ export function PostDetailModal({
           </div>
 
           {/* Actions - Estilo Instagram */}
-          <div className="border-t border-border px-3 sm:px-4 py-2.5 sm:py-3 space-y-2 sm:space-y-3 shrink-0">
+          <div className="border-t border-border px-3 sm:px-4 py-2.5 sm:py-3 space-y-2 sm:space-y-3 shrink-0 bg-background">
             {/* Action buttons */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
                 <Button
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "size-11 sm:size-12 transition-all duration-300 hover:scale-110 touch-manipulation",
+                    "size-10 sm:size-11 md:size-12 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation",
                     liked && "text-red-500"
                   )}
                   onClick={() => setLiked(!liked)}
+                  aria-label={liked ? "Descurtir" : "Curtir"}
                 >
                   <HugeiconsIcon
                     icon={FavouriteIcon}
                     className={cn(
-                      "size-6 sm:size-7 transition-all duration-300",
+                      "size-5 sm:size-6 md:size-7 transition-all duration-300",
                       liked && "fill-current"
                     )}
                   />
@@ -300,21 +311,23 @@ export function PostDetailModal({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-11 sm:size-12 transition-all duration-300 hover:scale-110 touch-manipulation"
+                  className="size-10 sm:size-11 md:size-12 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation"
+                  aria-label="Comentar"
                 >
                   <HugeiconsIcon
                     icon={Message01Icon}
-                    className="size-6 sm:size-7"
+                    className="size-5 sm:size-6 md:size-7"
                   />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-11 sm:size-12 transition-all duration-300 hover:scale-110 touch-manipulation"
+                  className="size-10 sm:size-11 md:size-12 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation"
+                  aria-label="Compartilhar"
                 >
                   <HugeiconsIcon
                     icon={Share07Icon}
-                    className="size-6 sm:size-7"
+                    className="size-5 sm:size-6 md:size-7"
                   />
                 </Button>
               </div>
@@ -322,15 +335,16 @@ export function PostDetailModal({
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "size-11 sm:size-12 transition-all duration-300 hover:scale-110 touch-manipulation",
+                  "size-10 sm:size-11 md:size-12 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation",
                   saved && "text-primary"
                 )}
                 onClick={() => setSaved(!saved)}
+                aria-label={saved ? "Remover dos salvos" : "Salvar"}
               >
                 <HugeiconsIcon
                   icon={Bookmark01Icon}
                   className={cn(
-                    "size-6 sm:size-7 transition-all duration-300",
+                    "size-5 sm:size-6 md:size-7 transition-all duration-300",
                     saved && "fill-current"
                   )}
                 />
@@ -340,13 +354,13 @@ export function PostDetailModal({
             {/* Likes and comments count */}
             <div className="space-y-1">
               {likes > 0 && (
-                <p className="text-sm font-semibold">
-                  {likes.toLocaleString()} curtidas
+                <p className="text-sm sm:text-base font-semibold">
+                  {likes.toLocaleString()} curtida{likes !== 1 ? "s" : ""}
                 </p>
               )}
               {comments > 0 && (
-                <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Ver todos os {comments} comentários
+                <button className="text-sm sm:text-base text-muted-foreground hover:text-foreground transition-colors active:text-foreground touch-manipulation">
+                  Ver todos os {comments} comentário{comments !== 1 ? "s" : ""}
                 </button>
               )}
             </div>

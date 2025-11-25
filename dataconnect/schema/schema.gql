@@ -1,0 +1,47 @@
+type User @table {
+  username: String!
+  email: String!
+  passwordHash: String!
+  createdAt: Timestamp!
+  displayName: String
+  bio: String
+  profilePictureUrl: String
+}
+
+type Post @table {
+  user: User!
+  content: String!
+  createdAt: Timestamp!
+  privacySetting: String!
+  imageUrl: String
+  videoUrl: String
+}
+
+type Comment @table {
+  user: User!
+  post: Post!
+  text: String!
+  createdAt: Timestamp!
+}
+
+type Reaction @table {
+  user: User!
+  post: Post!
+  type: String!
+  createdAt: Timestamp!
+}
+
+type Community @table {
+  name: String!
+  description: String!
+  createdAt: Timestamp!
+  imageUrl: String
+  rules: String
+}
+
+type CommunityMembership @table(key: ["user", "community"]) {
+  user: User!
+  community: Community!
+  joinedAt: Timestamp!
+  role: String
+}

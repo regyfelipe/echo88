@@ -1,0 +1,92 @@
+mutation CreateSeedData @transaction @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public for demonstration purposes.") {
+  user_insertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      username: "demouser1",
+      email: "demouser1@example.com",
+      passwordHash: "passwordhash1",
+      createdAt: "2024-04-26T12:00:00Z"
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      username: "demouser2",
+      email: "demouser2@example.com",
+      passwordHash: "passwordhash2",
+      createdAt: "2024-04-26T13:00:00Z"
+    }
+  ])
+  community_insertMany(data: [
+    {
+      id: "650e8400-e29b-41d4-a716-446655440000",
+      name: "community1",
+      description: "example community",
+      createdAt: "2024-04-26T14:00:00Z"
+    },
+    {
+      id: "650e8400-e29b-41d4-a716-446655440001",
+      name: "community2",
+      description: "another example community",
+      createdAt: "2024-04-26T15:00:00Z"
+    }
+  ])
+  post_insertMany(data: [
+    {
+      id: "750e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      content: "example post from demouser1",
+      createdAt: "2024-04-26T16:00:00Z",
+      privacySetting: "public"
+    },
+    {
+      id: "750e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      content: "example post from demouser2",
+      createdAt: "2024-04-26T17:00:00Z",
+      privacySetting: "private"
+    }
+  ])
+  comment_insertMany(data: [
+    {
+      id: "850e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      postId: "750e8400-e29b-41d4-a716-446655440000",
+      text: "example comment from demouser1 on demouser1's post",
+      createdAt: "2024-04-26T18:00:00Z"
+    },
+    {
+      id: "850e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      postId: "750e8400-e29b-41d4-a716-446655440001",
+      text: "example comment from demouser2 on demouser2's post",
+      createdAt: "2024-04-26T19:00:00Z"
+    }
+  ])
+  reaction_insertMany(data: [
+    {
+      id: "950e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      postId: "750e8400-e29b-41d4-a716-446655440000",
+      type: "like",
+      createdAt: "2024-04-26T20:00:00Z"
+    },
+    {
+      id: "950e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      postId: "750e8400-e29b-41d4-a716-446655440001",
+      type: "dislike",
+      createdAt: "2024-04-26T21:00:00Z"
+    }
+  ])
+  communityMembership_insertMany(data: [
+    {
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      communityId: "650e8400-e29b-41d4-a716-446655440000",
+      joinedAt: "2024-04-26T22:00:00Z"
+    },
+    {
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      communityId: "650e8400-e29b-41d4-a716-446655440001",
+      joinedAt: "2024-04-26T23:00:00Z"
+    }
+  ])
+}

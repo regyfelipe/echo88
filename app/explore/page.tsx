@@ -10,6 +10,10 @@ import {
   FavouriteIcon,
   Message01Icon,
   Image01Icon,
+  ThumbsDownIcon,
+  Navigation03Icon,
+  Analytics03Icon,
+  Bookmark02Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { PostDetailModal } from "@/components/post-detail-modal";
@@ -440,25 +444,54 @@ export default function ExplorePage() {
                     )}
 
                     {/* Informações no hover com animação elegante */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-700 ease-out">
-                      <div className="flex items-center gap-5 text-white transform translate-y-2 group-hover:translate-y-0 transition-all duration-700 ease-out">
-                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-110">
+                    <div className="absolute inset-0 flex items-center justify-between px-3 sm:px-4 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-out">
+                      {/* Lado esquerdo: ThumbsDownIcon, FavouriteIcon, Message01Icon */}
+                      <div className="flex items-center gap-2 sm:gap-3 text-white transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-700 ease-out">
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full shadow-xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation">
+                          <HugeiconsIcon
+                            icon={ThumbsDownIcon}
+                            className="size-3.5 sm:size-4"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full shadow-xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation">
                           <HugeiconsIcon
                             icon={FavouriteIcon}
-                            className="size-4 fill-white"
+                            className="size-3.5 sm:size-4 fill-white"
                           />
-                          <span className="text-sm font-semibold tracking-wide">
+                          <span className="text-xs sm:text-sm font-semibold tracking-wide">
                             {post.likes}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-110">
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full shadow-xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation">
                           <HugeiconsIcon
                             icon={Message01Icon}
-                            className="size-4"
+                            className="size-3.5 sm:size-4"
                           />
-                          <span className="text-sm font-semibold tracking-wide">
+                          <span className="text-xs sm:text-sm font-semibold tracking-wide">
                             {post.comments}
                           </span>
+                        </div>
+                      </div>
+
+                      {/* Lado direito: Navigation03Icon, Analytics03Icon, Bookmark02Icon */}
+                      <div className="flex items-center gap-2 sm:gap-3 text-white transform translate-x-[10px] group-hover:translate-x-0 transition-all duration-700 ease-out">
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full shadow-xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation">
+                          <HugeiconsIcon
+                            icon={Navigation03Icon}
+                            className="size-3.5 sm:size-4"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full shadow-xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation">
+                          <HugeiconsIcon
+                            icon={Analytics03Icon}
+                            className="size-3.5 sm:size-4"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full shadow-xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation">
+                          <HugeiconsIcon
+                            icon={Bookmark02Icon}
+                            className="size-3.5 sm:size-4"
+                          />
                         </div>
                       </div>
                     </div>

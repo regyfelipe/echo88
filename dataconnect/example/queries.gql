@@ -1,0 +1,36 @@
+mutation CreateCommunity($name: String!, $description: String!, $rules: String, $imageUrl: String) @auth(level: USER) {
+  community_insert(data: {
+    name: $name,
+    description: $description,
+    rules: $rules,
+    imageUrl: $imageUrl,
+    createdAt_expr: "request.time"
+  })
+}
+
+query ListCommunities @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  communities {
+    id
+    name
+    description
+    imageUrl
+  }
+}
+
+mutation JoinCommunity($communityId: UUID!) @auth(level: USER) {
+  communityMembership_insert(data: {
+    communityId: $communityId,
+    userId_expr: "auth.uid",
+    joinedAt_expr: "request.time"
+  })
+}
+
+query GetUserPosts @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  posts(where: {userId: {eq_expr: "auth.uid"}}) {
+    id
+    content
+    imageUrl
+    videoUrl
+    createdAt
+  }
+}

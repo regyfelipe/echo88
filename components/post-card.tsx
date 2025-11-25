@@ -17,6 +17,15 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  ThumbsDownIcon,
+  FavouriteIcon,
+  Message01Icon,
+  Navigation03Icon,
+  Analytics03Icon,
+  Bookmark02Icon,
+} from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PostDetailModal } from "./post-detail-modal";
@@ -543,16 +552,28 @@ export function PostCard({
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-2.5 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
-          <div className="flex items-center gap-0.5">
+          {/* Lado esquerdo: ThumbsDownIcon, FavouriteIcon, Message01Icon */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 h-8 px-2 sm:px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full hover:bg-accent/70"
+            >
+              <HugeiconsIcon
+                icon={ThumbsDownIcon}
+                className="size-4 transition-transform duration-300"
+              />
+            </Button>
             <Button
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5 h-8 px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full",
+                "gap-1.5 h-8 px-2 sm:px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full",
                 isLiked && "text-red-500 hover:text-red-500 hover:bg-red-500/10"
               )}
             >
-              <Heart
+              <HugeiconsIcon
+                icon={FavouriteIcon}
                 className={cn(
                   "size-4 transition-all duration-500 ease-out",
                   isLiked && "fill-current animate-pulse"
@@ -565,35 +586,55 @@ export function PostCard({
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 h-8 px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full hover:bg-accent/70"
+              className="gap-1.5 h-8 px-2 sm:px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full hover:bg-accent/70"
             >
-              <MessageCircle className="size-4 transition-transform duration-300 hover:scale-110" />
+              <HugeiconsIcon
+                icon={Message01Icon}
+                className="size-4 transition-transform duration-300"
+              />
               <span className="text-xs font-medium">{comments}</span>
+            </Button>
+          </div>
+
+          {/* Lado direito: Navigation03Icon, Analytics03Icon, Bookmark02Icon */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 h-8 px-2 sm:px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full hover:bg-accent/70"
+            >
+              <HugeiconsIcon
+                icon={Navigation03Icon}
+                className="size-4 transition-transform duration-300"
+              />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 h-8 px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full hover:bg-accent/70"
+              className="gap-1.5 h-8 px-2 sm:px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full hover:bg-accent/70"
             >
-              <Share2 className="size-4 transition-transform duration-300 hover:scale-110 hover:rotate-12" />
-              <span className="text-xs font-medium">{shares}</span>
+              <HugeiconsIcon
+                icon={Analytics03Icon}
+                className="size-4 transition-transform duration-300"
+              />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-8 px-2 sm:px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full",
+                isSaved && "text-primary hover:bg-primary/10"
+              )}
+            >
+              <HugeiconsIcon
+                icon={Bookmark02Icon}
+                className={cn(
+                  "size-4 transition-all duration-500 ease-out",
+                  isSaved && "fill-current"
+                )}
+              />
             </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 px-3 transition-all duration-500 ease-out hover:scale-110 active:scale-95 rounded-full",
-              isSaved && "text-primary hover:bg-primary/10"
-            )}
-          >
-            <Bookmark
-              className={cn(
-                "size-4 transition-all duration-500 ease-out",
-                isSaved && "fill-current"
-              )}
-            />
-          </Button>
         </div>
       </div>
 

@@ -47,20 +47,64 @@ export function SignupForm({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setPasswordErrors([]);
+
     if (password !== confirmPassword) {
-      alert("As senhas não coincidem!");
+      setError("As senhas não coincidem!");
       return;
     }
-    // Aqui você pode adicionar a lógica de cadastro
-    console.log({
-      avatar,
-      username,
-      fullName,
-      email,
-      password,
-    });
+
+    setIsLoading(true);
+
+    try {
+      // Converte avatar para base64 se existir
+      let avatarBase64: string | undefined;
+      if (avatar) {
+        const reader = new FileReader();
+        avatarBase64 = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(avatar);
+        });
+      }
+
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          username,
+          fullName,
+          password,
+          avatar: avatarBase64,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.errors) {
+          setPasswordErrors(data.errors);
+        }
+        throw new Error(data.error || "Erro ao criar conta");
+      }
+
+      // Redireciona para página de verificação
+      window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao criar conta");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -193,13 +237,33 @@ export function SignupForm({
                   variant="outline"
                   onClick={() => setStep(1)}
                   className="flex-1"
+                  disabled={isLoading}
                 >
                   Voltar
                 </Button>
-                <Button type="submit" className="flex-1">
-                  Cadastrar
+                <Button type="submit" className="flex-1" disabled={isLoading}>
+                  {isLoading ? "Criando..." : "Cadastrar"}
                 </Button>
               </Field>
+
+              {error && (
+                <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
+
+              {passwordErrors.length > 0 && (
+                <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+                  <p className="text-sm font-semibold text-destructive mb-2">
+                    A senha deve atender aos seguintes requisitos:
+                  </p>
+                  <ul className="text-sm text-destructive/80 space-y-1 list-disc list-inside">
+                    {passwordErrors.map((err, index) => (
+                      <li key={index}>{err}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </>
           )}
         </FieldGroup>

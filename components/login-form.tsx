@@ -26,11 +26,44 @@ export function LoginForm({
 
   const showPassword = emailOrUsername.trim() !== "";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui você pode adicionar a lógica de autenticação
-    // Por enquanto, apenas redireciona para o feed
-    router.push("/feed");
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailOrUsername,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.requiresVerification) {
+          router.push(`/verify-email?userId=${data.userId}`);
+          return;
+        }
+        throw new Error(data.error || "Erro ao fazer login");
+      }
+
+      // Redireciona para o feed
+      router.push("/feed");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao fazer login");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -67,7 +100,15 @@ export function LoginForm({
           </Field>
           {showPassword && (
             <Field>
-              <FieldLabel htmlFor="password">Senha</FieldLabel>
+              <div className="flex items-center justify-between">
+                <FieldLabel htmlFor="password">Senha</FieldLabel>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
+                >
+                  Esqueceu a senha?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -75,12 +116,19 @@ export function LoginForm({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </Field>
           )}
+
+          {error && (
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
           <Field>
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Entrando..." : "Login"}
             </Button>
           </Field>
           <FieldSeparator>Or</FieldSeparator>
