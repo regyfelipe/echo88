@@ -36,9 +36,26 @@ export async function POST(request: NextRequest) {
     // Salva token no banco
     await setPasswordResetToken(user.id, resetToken);
 
-    // Envia email
-    await sendPasswordResetEmail(user.email, resetToken);
+    // Envia email (não bloqueia se falhar)
+    try {
+      await sendPasswordResetEmail(user.email, resetToken);
+    } catch (emailError) {
+      // Loga o erro mas não falha a requisição (por segurança, sempre retorna sucesso)
+      const errorMessage =
+        emailError instanceof Error ? emailError.message : "Unknown error";
+      console.error("Error sending password reset email:", errorMessage);
+      interface ErrorWithStatusCode {
+        statusCode?: number;
+      }
+      if ((emailError as ErrorWithStatusCode)?.statusCode === 403) {
+        console.warn(
+          "Resend test mode: Only emails to your verified test address can be sent. " +
+            "To send to other addresses, verify a domain at resend.com/domains"
+        );
+      }
+    }
 
+    // Sempre retorna sucesso para não expor se o email existe
     return NextResponse.json({
       success: true,
       message: "Se o email existir, você receberá instruções de recuperação",
@@ -51,4 +68,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

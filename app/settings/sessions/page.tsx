@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BottomNavigation } from "@/components/bottom-navigation";
+import Link from "next/link";
+import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Settings01Icon,
   Logout01Icon,
-  Monitor01Icon,
-  Smartphone01Icon,
+  Tv02Icon,
+  SmartPhone02Icon,
   Tablet01Icon,
-  Globe01Icon,
+  EarthIcon,
 } from "@hugeicons/core-free-icons";
 import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
@@ -73,12 +74,12 @@ export default function SessionsPage() {
   const getDeviceIcon = (device: string) => {
     const lowerDevice = device.toLowerCase();
     if (lowerDevice.includes("mobile") || lowerDevice.includes("android") || lowerDevice.includes("iphone")) {
-      return Smartphone01Icon;
+      return SmartPhone02Icon;
     }
     if (lowerDevice.includes("tablet") || lowerDevice.includes("ipad")) {
       return Tablet01Icon;
     }
-    return Monitor01Icon;
+    return Tv02Icon;
   };
 
   const formatDate = (dateString: string) => {
@@ -104,9 +105,9 @@ export default function SessionsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" className="size-9 sm:size-10" asChild>
-                <a href="/profile">
+                <Link href="/profile">
                   <HugeiconsIcon icon={Settings01Icon} className="size-5 sm:size-6" />
-                </a>
+                </Link>
               </Button>
               <h1 className="text-xl sm:text-2xl font-bold">Sessões Ativas</h1>
             </div>
@@ -124,7 +125,7 @@ export default function SessionsPage() {
           ) : sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <HugeiconsIcon
-                icon={Monitor01Icon}
+                icon={Tv02Icon}
                 className="size-12 text-muted-foreground mb-4"
               />
               <p className="text-muted-foreground text-lg font-medium mb-1.5">
@@ -199,7 +200,7 @@ export default function SessionsPage() {
                           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                             {session.location && (
                               <div className="flex items-center gap-1">
-                                <HugeiconsIcon icon={Globe01Icon} className="size-3" />
+                                <HugeiconsIcon icon={EarthIcon} className="size-3" />
                                 <span>{session.location}</span>
                               </div>
                             )}

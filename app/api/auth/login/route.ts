@@ -46,7 +46,10 @@ export async function POST(request: NextRequest) {
 
     // Obtém informações do dispositivo
     const userAgent = request.headers.get("user-agent") || "Unknown";
-    const ip = request.headers.get("x-forwarded-for") || request.ip || "Unknown";
+    const ip =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      "Unknown";
 
     // Cria sessão
     const { token, sessionId } = await createSession(
@@ -80,10 +83,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "Erro ao fazer login" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erro ao fazer login" }, { status: 500 });
   }
 }
-

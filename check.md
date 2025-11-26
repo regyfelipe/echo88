@@ -42,6 +42,8 @@
 
 - [ X ] Exibição de posts em timeline
 - [ X ] Header fixo com logo e avatar
+- [ X ] Logo clicável para refresh do feed ✅
+- [ X ] Cache de posts (localStorage) para performance ✅
 - [ X ] Animações de entrada dos posts
 - [ X ] Anúncios Google Ads entre posts (a cada 3 posts)
 - [ X ] Suporte para múltiplos tipos de post:
@@ -50,11 +52,14 @@
   - [ X ] Vídeo
   - [ X ] Áudio
   - [ X ] Galeria (múltiplas imagens/vídeos)
+  - [ X ] Documento ✅
 - [ X ] Ações nos posts:
   - [ X ] Curtir (com estado visual)
-  - [ X ] Comentar
+  - [ X ] Não curtir (dislike) ✅
+  - [ X ] Comentar (com seção completa) ✅
   - [ X ] Compartilhar
   - [ X ] Salvar (com estado visual)
+  - [ X ] Visualizações (contador automático) ✅
 - [ X ] Ícones de hover nos posts:
   - [ X ] ThumbsDownIcon
   - [ X ] FavouriteIcon (com contador)
@@ -66,12 +71,15 @@
 ## 🔍 Funcionalidades do Explore
 
 - [ X ] Grid de posts estilo Instagram (3 colunas)
-- [ X ] Barra de busca funcional
+- [ X ] Barra de busca funcional (com debounce) ✅
+- [ X ] Busca unificada (posts, usuários, hashtags) ✅
+- [ X ] Filtros por tipo (All, Posts, Users, Hashtags) ✅
 - [ X ] Filtro em tempo real por:
   - [ X ] Nome do autor
   - [ X ] Username
   - [ X ] Conteúdo do post
-  - [ X ] Categoria
+  - [ X ] Hashtags ✅
+- [ X ] Resultados de busca de usuários com navegação para perfil ✅
 - [ X ] Hover effects nos posts:
   - [ X ] Overlay com informações
   - [ X ] Contador de likes e comentários
@@ -87,12 +95,16 @@
 - [ X ] Badge de verificação (verified)
 - [ X ] Estatísticas:
   - [ X ] Posts
-  - [ X ] Seguidores
-  - [ X ] Seguindo
+  - [ X ] Seguidores (com contagem real) ✅
+  - [ X ] Seguindo (com contagem real) ✅
   - [ X ] Visualizações (elemento único)
 - [ X ] Bio do usuário
 - [ X ] Botão "Editar Perfil"
 - [ X ] Botão de Configurações
+- [ X ] Botão Seguir/Deixar de seguir (em perfis de outros usuários) ✅
+- [ X ] Página de perfil por username (`/profile/[username]`) ✅
+- [ X ] Página de seguidores (`/profile/[username]/followers`) ✅
+- [ X ] Página de seguindo (`/profile/[username]/following`) ✅
 - [ X ] Achievements/Badges:
   - [ X ] Top Creator
   - [ X ] Hot Streak
@@ -104,8 +116,9 @@
   - [ X ] Posts
   - [ X ] Salvos
   - [ X ] Marcados
-- [ X ] Grid de posts (2 colunas no desktop, 1 no mobile)
+- [ X ] Grid de posts (3 colunas estilo Instagram) ✅
 - [ X ] Preview de posts com hover
+- [ X ] Cache de posts e estatísticas (localStorage) ✅
 
 ## 🔔 Funcionalidades de Notificações
 
@@ -133,9 +146,14 @@
   - [ X ] Vídeo
   - [ X ] Áudio
   - [ X ] Galeria
+  - [ X ] Documento ✅
 - [ X ] Upload de arquivos
 - [ X ] Preview de mídia antes de publicar
 - [ X ] Remoção de mídia
+- [ X ] Editor de imagens integrado (crop, filtros, rotação) ✅
+- [ X ] Compressão automática de imagens ✅
+- [ X ] Progress bar durante upload ✅
+- [ X ] Suporte para GIFs animados ✅
 - [ X ] Textarea para conteúdo
 - [ X ] Botões de ação:
   - [ X ] Áudio/Voz
@@ -160,12 +178,15 @@
 - [ X ] Contador de mídia (1/3)
 - [ X ] Ações:
   - [ X ] Curtir (com animação)
-  - [ X ] Comentar
+  - [ X ] Não curtir (dislike) ✅
+  - [ X ] Comentar (com seção de comentários completa) ✅
   - [ X ] Compartilhar
   - [ X ] Salvar
 - [ X ] Contadores de likes, comentários e shares
 - [ X ] Timestamp
 - [ X ] Modal de detalhes para imagens/vídeos/galerias
+- [ X ] Seção de comentários com replies ✅
+- [ X ] Hashtags e menções clicáveis nos comentários ✅
 - [ X ] Ícones de hover:
   - [ X ] ThumbsDownIcon
   - [ X ] FavouriteIcon
@@ -198,6 +219,9 @@
 - [ X ] Fechar com ESC
 - [ X ] Fechar clicando no backdrop
 - [ X ] Bloqueio de scroll do body quando aberto
+- [ X ] MediaViewer único com React Portal (fora do main) ✅
+- [ X ] Zoom de imagens ✅
+- [ X ] Backdrop com gradiente ✅
 
 ## 🧭 Navegação
 
@@ -428,41 +452,82 @@
 
 ### 👥 Social e Interações
 
-- [ ] Sistema de comentários completo
-- [ ] Respostas a comentários (threads)
-- [ ] Menções de usuários (@username)
-- [ ] Hashtags clicáveis (#hashtag)
-- [ ] Sistema de seguir/seguidores
-- [ ] Lista de seguidores/seguindo
-- [ ] Mensagens diretas (DM)
-- [ ] Chat em tempo real
-- [ ] Compartilhamento para redes sociais externas
-- [ ] Embed de posts em outros sites
+- [x] Sistema de comentários completo ✅
+  - Tabela `comments` criada
+  - API `/api/comments/create` - Criar comentários
+  - API `/api/comments/[postId]` - Listar comentários
+  - API `/api/comments/[commentId]` - Deletar comentários
+  - Contagem automática de comentários no post
+- [x] Respostas a comentários (threads) ✅
+  - Suporte a `parent_id` para criar threads
+  - Contagem automática de respostas por comentário
+  - Listagem hierárquica de comentários e respostas
+- [x] Menções de usuários (@username) ✅
+  - Tabela `mentions` criada
+  - Extração automática de menções em posts/comentários
+  - Função `extractMentions()` em `lib/utils/hashtags-mentions.ts`
+  - Processamento automático ao criar posts/comentários
+  - Formatação visual com links clicáveis
+- [x] Hashtags clicáveis (#hashtag) ✅
+  - Tabela `hashtags` e `post_hashtags` criadas
+  - Extração automática de hashtags em posts/comentários
+  - Função `extractHashtags()` em `lib/utils/hashtags-mentions.ts`
+  - API `/api/hashtags/[hashtag]` - Buscar posts por hashtag
+  - Contagem automática de posts por hashtag
+  - Formatação visual com links clicáveis
+- [x] Sistema de seguir/seguidores ✅
+  - Tabela `followers` criada
+  - API `/api/follow/[userId]` - Seguir/deixar de seguir
+  - API `/api/follow/[userId]/status` - Verificar status
+  - Validação para não seguir a si mesmo
+  - Prevenção de duplicatas
+- [x] Lista de seguidores/seguindo ✅
+  - API `/api/users/[userId]/followers` - Listar seguidores
+  - API `/api/users/[userId]/following` - Listar seguindo
+  - Dados completos do usuário incluídos
+- [x] Mensagens diretas (DM) ✅
+  - Tabela `direct_messages` criada
+  - API `/api/messages/send` - Enviar mensagem
+  - API `/api/messages/conversations` - Listar conversas
+  - API `/api/messages/[userId]` - Buscar mensagens
+  - Sistema de leitura/não lida
+  - Agrupamento automático por conversa
+- [ ] Chat em tempo real ⚠️
+  - APIs de mensagens prontas ✅
+  - Falta: Integração com Supabase Realtime (subscriptions)
+- [x] Compartilhamento para redes sociais externas ✅
+  - API `/api/posts/share` - Compartilhar post
+  - Suporte para Twitter, Facebook, WhatsApp, Telegram, LinkedIn
+  - Incremento automático de contador de compartilhamentos
+  - URLs de compartilhamento formatadas
+- [x] Embed de posts em outros sites ✅
+  - API `/api/posts/[postId]/embed` - Dados para embed
+  - Formato Open Graph compatível
+  - Metadados completos (título, descrição, imagem, autor)
 
 ### 📸 Mídia e Upload
 
-- [ ] Upload real de imagens/vídeos
-- [ ] Editor de imagens integrado
-- [ ] Filtros para fotos
-- [ ] Crop e redimensionamento
-- [ ] Compressão automática de mídia
-- [ ] Upload em lote
-- [ ] Progress bar para uploads
-- [ ] Preview antes de publicar
-- [ ] Suporte para GIFs animados
+- [x] Upload real de imagens/vídeos ✅
+- [x] Editor de imagens integrado ✅
+- [x] Filtros para fotos ✅
+- [x] Crop e redimensionamento ✅
+- [x] Compressão automática de mídia ✅
+- [x] Upload em lote ✅
+- [x] Progress bar para uploads ✅
+- [x] Preview antes de publicar ✅
+- [x] Suporte para GIFs animados ✅
 - [ ] Stories temporárias (24h)
 
 ### 🔍 Busca e Descoberta
 
-- [ ] Busca avançada com filtros
-- [ ] Busca por hashtags
+- [x] Busca por hashtags ✅
 - [ ] Busca por localização
-- [ ] Sugestões de usuários para seguir
-- [ ] Posts populares
-- [ ] Posts em alta (trending)
+- [x] Sugestões de usuários para seguir ✅
+- [x] Posts populares ✅
+- [x] Posts em alta (trending) ✅
 - [ ] Categorias/tópicos
 - [ ] Recomendações personalizadas
-- [ ] Histórico de buscas
+- [x] Histórico de buscas ✅
 
 ### 📊 Analytics e Insights
 
@@ -476,15 +541,15 @@
 
 ### ⚙️ Configurações e Personalização
 
-- [ ] Configurações de privacidade
-- [ ] Conta privada/pública
-- [ ] Bloqueio de usuários
-- [ ] Silenciar usuários
-- [ ] Notificações personalizáveis
-- [ ] Tema claro/escuro toggle
+- [x] Configurações de privacidade ✅
+- [x] Conta privada/pública ✅
+- [x] Bloqueio de usuários ✅
+- [x] Silenciar usuários ✅
+- [x] Notificações personalizáveis ✅
+- [x] Tema claro/escuro toggle ✅
 - [ ] Idioma (i18n)
 - [ ] Preferências de conteúdo
-- [ ] Download de dados (LGPD)
+- [x] Download de dados (LGPD) ✅
 
 ### 💰 Monetização
 
@@ -763,4 +828,26 @@
 
 **Status do Projeto:** ✅ Completo e Funcional
 
-**Última atualização:** 2024
+**Funcionalidades Recentes Implementadas:**
+
+- ✅ Sistema de dislike (não curtir) separado de like
+- ✅ Editor de imagens completo (crop, filtros, rotação, zoom)
+- ✅ Compressão automática de imagens
+- ✅ Progress bar para uploads
+- ✅ Suporte para GIFs animados
+- ✅ Cache inteligente (localStorage) para feed e perfis
+- ✅ Busca unificada (posts, usuários, hashtags)
+- ✅ Páginas de perfil por username
+- ✅ Páginas de seguidores/seguindo
+- ✅ Seção de comentários completa com replies
+- ✅ MediaViewer único com React Portal
+- ✅ Upload em lote com compressão
+- ✅ Preview antes de publicar com edição
+- ✅ Página de configurações completa (/settings)
+- ✅ Sistema de privacidade (conta privada/pública)
+- ✅ Bloqueio e silenciamento de usuários
+- ✅ Toggle de tema claro/escuro/sistema
+- ✅ Notificações personalizáveis
+- ✅ Download de dados pessoais (LGPD)
+
+**Última atualização:** 2025-01-26

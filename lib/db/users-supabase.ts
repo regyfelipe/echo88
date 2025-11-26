@@ -4,6 +4,7 @@
  */
 
 import { createServerClient } from "../supabase/server";
+import { createAdminClient } from "../supabase/admin";
 import { hashPassword, verifyPassword } from "../auth/password";
 import { hashToken } from "../auth/tokens";
 import type { Database } from "../supabase/database.types";
@@ -88,6 +89,7 @@ function rowToSession(row: SessionRow): LoginSession {
 
 /**
  * Cria um novo usuário
+ * Usa admin client para bypassar RLS
  */
 export async function createUser(
   email: string,
@@ -96,7 +98,7 @@ export async function createUser(
   password: string,
   avatar?: string
 ): Promise<User> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const passwordHash = await hashPassword(password);
   const emailVerificationToken = hashToken(
     `verify_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -140,9 +142,10 @@ export async function createUser(
 
 /**
  * Busca usuário por email
+ * Usa admin client para bypassar RLS
  */
 export async function getUserByEmail(email: string): Promise<User | null> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("users")
@@ -159,9 +162,12 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 
 /**
  * Busca usuário por username
+ * Usa admin client para bypassar RLS
  */
-export async function getUserByUsername(username: string): Promise<User | null> {
-  const supabase = await createServerClient();
+export async function getUserByUsername(
+  username: string
+): Promise<User | null> {
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("users")
@@ -178,9 +184,10 @@ export async function getUserByUsername(username: string): Promise<User | null> 
 
 /**
  * Busca usuário por ID
+ * Usa admin client para bypassar RLS
  */
 export async function getUserById(id: string): Promise<User | null> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("users")
@@ -216,12 +223,13 @@ export async function verifyCredentials(
 
 /**
  * Atualiza token de recuperação de senha
+ * Usa admin client para bypassar RLS
  */
 export async function setPasswordResetToken(
   userId: string,
   token: string
 ): Promise<void> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const hashedToken = hashToken(token);
   const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1h
 
@@ -240,11 +248,12 @@ export async function setPasswordResetToken(
 
 /**
  * Verifica token de recuperação de senha
+ * Usa admin client para bypassar RLS
  */
 export async function verifyPasswordResetToken(
   token: string
 ): Promise<User | null> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const hashedToken = hashToken(token);
 
   const { data, error } = await supabase
@@ -263,12 +272,13 @@ export async function verifyPasswordResetToken(
 
 /**
  * Atualiza senha do usuário
+ * Usa admin client para bypassar RLS
  */
 export async function updateUserPassword(
   userId: string,
   newPassword: string
 ): Promise<void> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const passwordHash = await hashPassword(newPassword);
 
   const { error } = await supabase
@@ -315,9 +325,10 @@ export async function verifyEmailToken(token: string): Promise<User | null> {
 
 /**
  * Marca email como verificado
+ * Usa admin client para bypassar RLS
  */
 export async function verifyUserEmail(userId: string): Promise<void> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("users")
@@ -335,13 +346,14 @@ export async function verifyUserEmail(userId: string): Promise<void> {
 
 /**
  * Adiciona sessão de login
+ * Usa admin client para bypassar RLS
  */
 export async function addLoginSession(
   userId: string,
   deviceId: string,
   deviceInfo: LoginSession["deviceInfo"]
 ): Promise<LoginSession> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const insert: SessionInsert = {
     user_id: userId,
@@ -365,9 +377,10 @@ export async function addLoginSession(
 
 /**
  * Obtém todas as sessões de um usuário
+ * Usa admin client para bypassar RLS
  */
 export async function getUserSessions(userId: string): Promise<LoginSession[]> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("login_sessions")
@@ -385,12 +398,13 @@ export async function getUserSessions(userId: string): Promise<LoginSession[]> {
 
 /**
  * Remove uma sessão específica
+ * Usa admin client para bypassar RLS
  */
 export async function removeSession(
   userId: string,
   sessionId: string
 ): Promise<void> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("login_sessions")
@@ -405,12 +419,13 @@ export async function removeSession(
 
 /**
  * Remove todas as sessões de um usuário (exceto a atual)
+ * Usa admin client para bypassar RLS
  */
 export async function removeAllSessionsExcept(
   userId: string,
   currentSessionId: string
 ): Promise<void> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("login_sessions")
@@ -425,12 +440,13 @@ export async function removeAllSessionsExcept(
 
 /**
  * Atualiza última atividade de uma sessão
+ * Usa admin client para bypassar RLS
  */
 export async function updateSessionActivity(
   userId: string,
   sessionId: string
 ): Promise<void> {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("login_sessions")
@@ -442,4 +458,3 @@ export async function updateSessionActivity(
     throw error;
   }
 }
-

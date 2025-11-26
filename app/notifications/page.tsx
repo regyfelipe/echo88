@@ -1,6 +1,7 @@
 "use client";
 
-import { BottomNavigation } from "@/components/bottom-navigation";
+import { useRouter } from "next/navigation";
+import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   FavouriteIcon,
@@ -11,111 +12,16 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-interface Notification {
-  id: string;
-  type: "like" | "comment" | "follow" | "share";
-  user: {
-    name: string;
-    username: string;
-    avatar?: string;
-  };
-  message: string;
-  timeAgo: string;
-  isRead: boolean;
-  postPreview?: {
-    image?: string;
-    content?: string;
-  };
-  multipleUsers?: number;
-}
+import { useNotifications, type Notification } from "@/lib/hooks/use-notifications";
+import Image from "next/image";
 
 export default function NotificationsPage() {
-  const notifications: Notification[] = [
-    {
-      id: "1",
-      type: "like",
-      user: {
-        name: "João Silva",
-        username: "joaosilva",
-      },
-      message: "curtiu seu post",
-      timeAgo: "5 min",
-      isRead: false,
-      postPreview: {
-        image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=80",
-      },
-    },
-    {
-      id: "2",
-      type: "comment",
-      user: {
-        name: "Maria Santos",
-        username: "mariasantos",
-      },
-      message: "comentou no seu post",
-      timeAgo: "1h",
-      isRead: false,
-      postPreview: {
-        image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&q=80",
-        content: "Que foto incrível! 📸",
-      },
-    },
-    {
-      id: "3",
-      type: "follow",
-      user: {
-        name: "Pedro Costa",
-        username: "pedrocosta",
-      },
-      message: "começou a seguir você",
-      timeAgo: "3h",
-      isRead: true,
-    },
-    {
-      id: "4",
-      type: "like",
-      user: {
-        name: "Ana Oliveira",
-        username: "anaoliveira",
-      },
-      message: "e mais 5 pessoas curtiram seu post",
-      timeAgo: "1d",
-      isRead: true,
-      multipleUsers: 5,
-      postPreview: {
-        image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200&q=80",
-      },
-    },
-    {
-      id: "5",
-      type: "share",
-      user: {
-        name: "Carlos Mendes",
-        username: "carlosmendes",
-      },
-      message: "compartilhou seu post",
-      timeAgo: "2d",
-      isRead: true,
-      postPreview: {
-        image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=80",
-      },
-    },
-    {
-      id: "6",
-      type: "comment",
-      user: {
-        name: "Julia Ferreira",
-        username: "juliaferreira",
-      },
-      message: "respondeu seu comentário",
-      timeAgo: "3d",
-      isRead: true,
-      postPreview: {
-        content: "Obrigada! 😊",
-      },
-    },
-  ];
+  const router = useRouter();
+  const {
+    notifications,
+    unreadCount,
+    markAllAsRead,
+  } = useNotifications({ limit: 100 });
 
   const getNotificationIcon = (type: Notification["type"]) => {
     switch (type) {
@@ -147,6 +53,15 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleNotificationClick = (notification: Notification) => {
+    // Navegar para o post ou perfil
+    if (notification.postId) {
+      router.push(`/post/${notification.postId}`);
+    } else if (notification.type === "follow") {
+      router.push(`/profile/${notification.user.username}`);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28">
       {/* Header */}
@@ -156,13 +71,16 @@ export default function NotificationsPage() {
             <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent transition-all duration-700 ease-out">
               Notificações
             </h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs sm:text-sm text-muted-foreground hover:text-foreground"
-            >
-              Marcar todas como lidas
-            </Button>
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs sm:text-sm text-muted-foreground hover:text-foreground"
+                onClick={markAllAsRead}
+              >
+                Marcar todas como lidas
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -179,6 +97,7 @@ export default function NotificationsPage() {
                 return (
                   <div
                     key={notification.id}
+                    onClick={() => handleNotificationClick(notification)}
                     className={cn(
                       "flex items-start gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-accent/30 transition-all duration-300 ease-out cursor-pointer group animate-in fade-in slide-in-from-left-4",
                       !notification.isRead && "bg-primary/5 border-l-2 border-l-primary"
@@ -191,11 +110,13 @@ export default function NotificationsPage() {
                     <div className="relative shrink-0">
                       <div className="size-11 sm:size-12 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden ring-2 ring-background transition-all duration-300 group-hover:ring-primary/30 group-hover:scale-105">
                         {notification.user.avatar ? (
-                          <img
+                          <Image
                             src={notification.user.avatar}
                             alt={notification.user.name}
+                            width={48}
+                            height={48}
                             className="size-full object-cover"
-                            loading="lazy"
+                            unoptimized
                           />
                         ) : (
                           <span className="text-primary font-semibold text-sm sm:text-base">
@@ -223,12 +144,6 @@ export default function NotificationsPage() {
                         <div className="flex items-start gap-2 flex-wrap">
                           <p className="text-sm sm:text-base font-semibold text-foreground">
                             {notification.user.name}
-                            {notification.multipleUsers && (
-                              <span className="text-muted-foreground font-normal">
-                                {" "}
-                                e mais {notification.multipleUsers}
-                              </span>
-                            )}
                           </p>
                           <p className="text-sm sm:text-base text-foreground/80">
                             {notification.message}
@@ -244,20 +159,31 @@ export default function NotificationsPage() {
                         <div className="shrink-0">
                           {notification.postPreview.image ? (
                             <div className="size-14 sm:size-16 rounded-lg overflow-hidden bg-muted border border-border/50 transition-all duration-300 group-hover:scale-105 group-hover:border-primary/30">
-                              <img
+                              <Image
                                 src={notification.postPreview.image}
                                 alt="Post preview"
+                                width={64}
+                                height={64}
                                 className="w-full h-full object-cover"
-                                loading="lazy"
+                                unoptimized
+                                onError={(e) => {
+                                  // Se a imagem falhar, esconder o preview
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = "none";
+                                  const parent = target.parentElement;
+                                  if (parent) {
+                                    parent.style.display = "none";
+                                  }
+                                }}
                               />
                             </div>
-                          ) : (
+                          ) : notification.postPreview.content ? (
                             <div className="size-14 sm:size-16 rounded-lg bg-muted/50 border border-border/50 flex items-center justify-center p-2">
                               <p className="text-xs text-muted-foreground line-clamp-3 text-center">
                                 {notification.postPreview.content}
                               </p>
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       )}
                     </div>

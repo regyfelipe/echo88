@@ -39,16 +39,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
+  // Não precisa re-verificar quando a rota muda se já temos um usuário
+  // O checkAuth inicial já é suficiente
+
   const checkAuth = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch("/api/auth/me", {
         credentials: "include",
+        cache: "no-store", // Evita cache que pode causar problemas
       });
 
       if (response.ok) {
         const data = await response.json();
-        setUser(data.user);
+        if (data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+          if (!isPublicRoute) {
+            router.push("/login");
+          }
+        }
       } else {
+        // Só limpa o usuário se realmente não estiver autenticado
         setUser(null);
         // Se não estiver em rota pública, redireciona para login
         if (!isPublicRoute) {
@@ -57,7 +70,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Auth check error:", error);
-      setUser(null);
+      // Em caso de erro de rede, mantém o usuário se já existir
+      // Só limpa se não tiver usuário ainda (primeira verificação)
+      if (!user) {
+        setUser(null);
+        if (!isPublicRoute) {
+          router.push("/login");
+        }
+      }
     } finally {
       setIsLoading(false);
     }
