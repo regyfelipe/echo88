@@ -15,8 +15,9 @@ import { Add01Icon, Folder01Icon } from "@hugeicons/core-free-icons";
 import { collectionsApi } from "@/lib/api/collections";
 import type { Collection } from "@/lib/types/collection";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/contexts/toast-context";
 
-interface CollectionSelectorModalProps {
+export interface CollectionSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   postId: string;
@@ -29,6 +30,7 @@ export function CollectionSelectorModal({
   postId,
   onPostAdded,
 }: CollectionSelectorModalProps) {
+  const { success, error: showError } = useToast();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -57,10 +59,11 @@ export function CollectionSelectorModal({
     try {
       await collectionsApi.addPost(collectionId, postId);
       onPostAdded?.();
+      success("Post adicionado!", "O post foi adicionado à coleção");
       onClose();
     } catch (error) {
       console.error("Error adding post to collection:", error);
-      alert("Erro ao adicionar post à coleção");
+      showError("Erro ao adicionar post", "Não foi possível adicionar o post à coleção");
     }
   };
 
@@ -76,9 +79,10 @@ export function CollectionSelectorModal({
       setCollections((prev) => [data.collection, ...prev]);
       setNewCollectionName("");
       setShowCreateForm(false);
+      success("Coleção criada!", "A coleção foi criada com sucesso");
     } catch (error) {
       console.error("Error creating collection:", error);
-      alert("Erro ao criar coleção");
+      showError("Erro ao criar coleção", "Não foi possível criar a coleção");
     } finally {
       setIsCreating(false);
     }

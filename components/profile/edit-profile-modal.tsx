@@ -19,6 +19,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { User, Upload } from "lucide-react";
+import { ProfileCustomizationSection } from "./profile-customization-section";
 
 interface AvailabilityStatus {
   available: boolean | null;
@@ -26,7 +27,7 @@ interface AvailabilityStatus {
   checking: boolean;
 }
 
-interface EditProfileModalProps {
+export interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -43,6 +44,14 @@ export function EditProfileModal({
   const [bio, setBio] = useState("");
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string>("");
+  const [themeColor, setThemeColor] = useState<string | null>(null);
+  const [accentColor, setAccentColor] = useState<string | null>(null);
+  const [customFont, setCustomFont] = useState<string | null>(null);
+  const [layoutStyle, setLayoutStyle] = useState<string>("default");
+  const [customEmoji, setCustomEmoji] = useState<string | null>(null);
+  const [showCustomization, setShowCustomization] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usernameStatus, setUsernameStatus] = useState<AvailabilityStatus>({
@@ -63,12 +72,24 @@ export function EditProfileModal({
             setFullName(data.fullName || "");
             setBio(data.bio || "");
             setAvatarPreview(data.avatar || "");
+            setCoverPreview(data.coverImage || "");
+            setThemeColor(data.themeColor || null);
+            setAccentColor(data.accentColor || null);
+            setCustomFont(data.customFont || null);
+            setLayoutStyle(data.layoutStyle || "default");
+            setCustomEmoji(data.customEmoji || null);
           } else {
             // Fallback para dados do contexto
             setUsername(user.username);
             setFullName(user.fullName);
             setBio("");
             setAvatarPreview(user.avatar || "");
+            setCoverPreview("");
+            setThemeColor(null);
+            setAccentColor(null);
+            setCustomFont(null);
+            setLayoutStyle("default");
+            setCustomEmoji(null);
           }
         })
         .catch((err) => {
@@ -78,6 +99,12 @@ export function EditProfileModal({
           setFullName(user.fullName);
           setBio("");
           setAvatarPreview(user.avatar || "");
+          setCoverPreview("");
+          setThemeColor(null);
+          setAccentColor(null);
+          setCustomFont(null);
+          setLayoutStyle("default");
+          setCustomEmoji(null);
         });
     }
   }, [isOpen, user]);
@@ -86,7 +113,9 @@ export function EditProfileModal({
   useEffect(() => {
     if (!isOpen) {
       setAvatar(null);
+      setCoverImage(null);
       setError(null);
+      setShowCustomization(false);
       setUsernameStatus({ available: null, checking: false });
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -212,6 +241,7 @@ export function EditProfileModal({
 
     try {
       let avatarUrl = avatarPreview;
+      let coverImageUrl = coverPreview;
 
       // Se houver novo avatar, fazer upload
       if (avatar) {
@@ -233,6 +263,27 @@ export function EditProfileModal({
         avatarUrl = uploadData.publicUrl;
       }
 
+      // Se houver nova capa, fazer upload
+      if (coverImage) {
+        const formData = new FormData();
+        formData.append("file", coverImage);
+        formData.append("bucket", "posts");
+        formData.append("folder", "covers");
+
+        const uploadResponse = await fetch("/api/storage/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          const uploadData = await uploadResponse.json();
+          throw new Error(uploadData.error || "Erro ao fazer upload da capa");
+        }
+
+        const uploadData = await uploadResponse.json();
+        coverImageUrl = uploadData.publicUrl;
+      }
+
       // Atualizar perfil
       const updateResponse = await fetch("/api/users/profile", {
         method: "PATCH",
@@ -244,6 +295,12 @@ export function EditProfileModal({
           fullName: fullName.trim(),
           bio: bio.trim() || null,
           avatarUrl: avatarUrl || null,
+          coverImageUrl: coverImageUrl || null,
+          themeColor: themeColor || null,
+          accentColor: accentColor || null,
+          customFont: customFont || null,
+          layoutStyle: layoutStyle,
+          customEmoji: customEmoji || null,
         }),
       });
 
@@ -416,17 +473,57 @@ export function EditProfileModal({
               <FieldLabel htmlFor="bio">Bio</FieldLabel>
               <Textarea
                 id="bio"
-                placeholder="Conte um pouco sobre você..."
+                placeholder="Conte um pouco sobre você... Você pode usar links e emojis! 😊"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 rows={4}
-                maxLength={150}
+                maxLength={2200}
                 disabled={isLoading}
               />
               <FieldDescription className="text-xs text-right">
-                {bio.length}/150
+                {bio.length}/2200
+              </FieldDescription>
+              <FieldDescription className="text-xs text-muted-foreground mt-1">
+                Dica: Links serão clicáveis automaticamente. Ex:
+                https://exemplo.com
               </FieldDescription>
             </Field>
+
+            {/* Botão para Personalização Visual */}
+            <div className="pt-2 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowCustomization(!showCustomization)}
+              >
+                {showCustomization ? "Ocultar" : "Mostrar"} Personalização
+                Visual
+              </Button>
+            </div>
+
+            {/* Seção de Personalização Visual */}
+            {showCustomization && (
+              <div className="pt-4 border-t border-border space-y-4">
+                <ProfileCustomizationSection
+                  coverImage={coverPreview}
+                  themeColor={themeColor}
+                  accentColor={accentColor}
+                  customFont={customFont}
+                  layoutStyle={layoutStyle}
+                  customEmoji={customEmoji}
+                  onCoverImageChange={(file, preview) => {
+                    setCoverImage(file);
+                    setCoverPreview(preview);
+                  }}
+                  onThemeColorChange={setThemeColor}
+                  onAccentColorChange={setAccentColor}
+                  onCustomFontChange={setCustomFont}
+                  onLayoutStyleChange={setLayoutStyle}
+                  onCustomEmojiChange={setCustomEmoji}
+                />
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (

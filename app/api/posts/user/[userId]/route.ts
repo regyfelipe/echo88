@@ -44,6 +44,33 @@ export async function GET(
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
+    // Debug: verificar posts retornados do banco
+    if (posts) {
+      const imageCount = posts.filter(
+        (p: { type: string }) => p.type === "image"
+      ).length;
+      const videoCount = posts.filter(
+        (p: { type: string }) => p.type === "video"
+      ).length;
+      const audioCount = posts.filter(
+        (p: { type: string }) => p.type === "audio"
+      ).length;
+      console.log("🗄️ Banco de dados - Posts por tipo:", {
+        total: posts.length,
+        imagens: imageCount,
+        videos: videoCount,
+        audios: audioCount,
+      });
+
+      // Log dos primeiros posts de imagem do banco
+      const imagePostsFromDb = posts.filter(
+        (p: { type: string }) => p.type === "image"
+      );
+      if (imagePostsFromDb.length > 0) {
+        console.log("🖼️ Banco - Primeiro post de imagem:", imagePostsFromDb[0]);
+      }
+    }
+
     if (error) {
       console.error("Error fetching user posts:", error);
       return NextResponse.json(
@@ -73,18 +100,31 @@ export async function GET(
       (posts as PostRow[] | null)?.map((post) => {
         const timeAgo = getTimeAgo(post.created_at);
 
+        // Debug: verificar posts de imagem
+        if (post.type === "image") {
+          console.log("🖼️ API - Post de imagem encontrado:", {
+            id: post.id,
+            type: post.type,
+            media_url: post.media_url,
+            has_media_url: !!post.media_url,
+          });
+        }
+
         return {
           id: post.id,
-          image: post.type === "image" ? post.media_url : undefined,
+          // Para imagens, garantir que o campo image seja preenchido
+          image:
+            post.type === "image" ? post.media_url || undefined : undefined,
           content: post.content || undefined,
           type: post.type,
-          media_url: post.media_url,
-          media_thumbnail: post.media_thumbnail,
-          media_title: post.media_title,
-          media_artist: post.media_artist,
-          gallery_items: post.gallery_items,
-          document_url: post.document_url,
-          document_name: post.document_name,
+          // Sempre incluir media_url para compatibilidade
+          media_url: post.media_url || undefined,
+          media_thumbnail: post.media_thumbnail || undefined,
+          media_title: post.media_title || undefined,
+          media_artist: post.media_artist || undefined,
+          gallery_items: post.gallery_items || undefined,
+          document_url: post.document_url || undefined,
+          document_name: post.document_name || undefined,
           likes: post.likes_count || 0,
           comments: post.comments_count || 0,
           shares: post.shares_count || 0,
@@ -92,9 +132,21 @@ export async function GET(
         };
       }) || [];
 
+    // Debug: contar posts por tipo
+    const imageCount = formattedPosts.filter((p) => p.type === "image").length;
+    const videoCount = formattedPosts.filter((p) => p.type === "video").length;
+    const audioCount = formattedPosts.filter((p) => p.type === "audio").length;
+    console.log("📊 API - Posts formatados por tipo:", {
+      total: formattedPosts.length,
+      imagens: imageCount,
+      videos: videoCount,
+      audios: audioCount,
+    });
+
     return NextResponse.json({ posts: formattedPosts });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     console.error("Error in user posts route:", error);
     return NextResponse.json(
       { error: "Internal server error", details: errorMessage },

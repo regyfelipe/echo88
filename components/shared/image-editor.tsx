@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import ReactCrop, {
   type Crop,
   type PixelCrop,
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { X, RotateCw, ZoomIn, ZoomOut, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface ImageEditorProps {
+export interface ImageEditorProps {
   image: File | string;
   onSave: (editedImage: File) => void;
   onCancel: () => void;
@@ -33,35 +33,108 @@ export function ImageEditor({
   const imgRef = useRef<HTMLImageElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const imageUrl = typeof image === "string" ? image : URL.createObjectURL(image);
+  const imageUrl = (() => {
+    if (typeof image === "string") {
+      return image;
+    }
+    // Type guard para File ou Blob
+    const imageObj = image as File | Blob;
+    if (imageObj instanceof File || imageObj instanceof Blob) {
+      return URL.createObjectURL(imageObj);
+    }
+    return null;
+  })();
 
-  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    if (aspectRatio) {
-      const { width, height } = e.currentTarget;
-      const crop = centerCrop(
-        makeAspectCrop(
-          {
-            unit: "%",
-            width: 90,
-          },
-          aspectRatio,
+  // Cleanup URL quando componente desmontar
+  useEffect(() => {
+    return () => {
+      if (imageUrl && typeof image !== "string" && image instanceof File) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl, image]);
+
+  const onImageLoad = useCallback(
+    (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const img = e.currentTarget;
+      const { width, height } = img;
+      const scaleX = img.naturalWidth / width;
+      const scaleY = img.naturalHeight / height;
+
+      if (aspectRatio) {
+        const crop = centerCrop(
+          makeAspectCrop(
+            {
+              unit: "%",
+              width: 90,
+            },
+            aspectRatio,
+            width,
+            height
+          ),
           width,
           height
-        ),
-        width,
-        height
-      );
-      setCrop(crop);
-    }
-  }, [aspectRatio]);
+        );
+        setCrop(crop);
+      }
+    },
+    [aspectRatio]
+  );
 
   const getCroppedImg = useCallback(async (): Promise<File | null> => {
-    if (!completedCrop || !imgRef.current || !previewCanvasRef.current) {
+    if (!imgRef.current) {
       return null;
+    }
+
+    // Se não houver crop definido ou canvas, retornar a imagem original com filtros aplicados
+    if (!completedCrop) {
+      const img = imgRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        return null;
+      }
+
+      // Aplicar filtros
+      ctx.filter = filter;
+
+      // Rotação
+      if (rotate !== 0) {
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((rotate * Math.PI) / 180);
+        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+      }
+
+      ctx.drawImage(img, 0, 0);
+
+      return new Promise((resolve) => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(null);
+              return;
+            }
+            const file = new File([blob], "edited-image.jpg", {
+              type: "image/jpeg",
+            });
+            resolve(file);
+          },
+          "image/jpeg",
+          0.9
+        );
+      });
     }
 
     const image = imgRef.current;
     const canvas = previewCanvasRef.current;
+
+    if (!canvas || !image) {
+      return null;
+    }
+
     const crop = completedCrop;
 
     const scaleX = image.naturalWidth / image.width;
@@ -84,9 +157,11 @@ export function ImageEditor({
 
     // Rotação
     if (rotate !== 0) {
-      ctx.translate(canvas.width / 2, canvas.height / 2);
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      ctx.translate(centerX, centerY);
       ctx.rotate((rotate * Math.PI) / 180);
-      ctx.translate(-canvas.width / 2, -canvas.height / 2);
+      ctx.translate(-centerX, -centerY);
     }
 
     ctx.drawImage(
@@ -120,9 +195,23 @@ export function ImageEditor({
   }, [completedCrop, filter, rotate]);
 
   const handleSave = async () => {
-    const editedImage = await getCroppedImg();
-    if (editedImage) {
-      onSave(editedImage);
+    try {
+      const editedImage = await getCroppedImg();
+      if (editedImage) {
+        onSave(editedImage);
+      } else {
+        console.error("Failed to get edited image");
+        // Se não conseguir processar, usar a imagem original
+        if (typeof image !== "string" && image instanceof File) {
+          onSave(image);
+        }
+      }
+    } catch (error) {
+      console.error("Error saving image:", error);
+      // Em caso de erro, tentar usar a imagem original
+      if (typeof image !== "string" && image instanceof File) {
+        onSave(image);
+      }
     }
   };
 
@@ -199,34 +288,33 @@ export function ImageEditor({
           </div>
 
           {/* Crop Area */}
-          <div className="flex justify-center">
-            <ReactCrop
-              crop={crop}
-              onChange={(_, percentCrop) => setCrop(percentCrop)}
-              onComplete={(c) => setCompletedCrop(c)}
-              aspect={aspectRatio}
-              className="max-w-full"
-            >
-              <img
-                ref={imgRef}
-                alt="Crop me"
-                src={imageUrl}
-                onLoad={onImageLoad}
-                style={{
-                  transform: `scale(${scale}) rotate(${rotate}deg)`,
-                  filter,
-                  maxWidth: "100%",
-                  maxHeight: "70vh",
-                }}
-              />
-            </ReactCrop>
-          </div>
+          {imageUrl && (
+            <div className="flex justify-center">
+              <ReactCrop
+                crop={crop}
+                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={aspectRatio}
+                className="max-w-full"
+              >
+                <img
+                  ref={imgRef}
+                  alt="Crop me"
+                  src={imageUrl}
+                  onLoad={onImageLoad}
+                  style={{
+                    transform: `scale(${scale}) rotate(${rotate}deg)`,
+                    filter,
+                    maxWidth: "100%",
+                    maxHeight: "70vh",
+                  }}
+                />
+              </ReactCrop>
+            </div>
+          )}
 
           {/* Preview Canvas (hidden) */}
-          <canvas
-            ref={previewCanvasRef}
-            style={{ display: "none" }}
-          />
+          <canvas ref={previewCanvasRef} style={{ display: "none" }} />
         </div>
 
         {/* Footer */}
@@ -243,4 +331,3 @@ export function ImageEditor({
     </div>
   );
 }
-

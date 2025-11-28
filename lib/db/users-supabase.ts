@@ -399,6 +399,7 @@ export async function getUserSessions(userId: string): Promise<LoginSession[]> {
 /**
  * Remove uma sessão específica
  * Usa admin client para bypassar RLS
+ * sessionId pode ser o device_id (string) ou o id UUID da sessão
  */
 export async function removeSession(
   userId: string,
@@ -406,14 +407,32 @@ export async function removeSession(
 ): Promise<void> {
   const supabase = createAdminClient();
 
-  const { error } = await supabase
-    .from("login_sessions")
-    .update({ is_active: false })
-    .eq("id", sessionId)
-    .eq("user_id", userId);
+  // Tenta primeiro como device_id (mais comum)
+  // Se sessionId tiver 32 caracteres hexadecimais, é um device_id
+  const isDeviceId = /^[a-f0-9]{32}$/i.test(sessionId);
+  
+  if (isDeviceId) {
+    // Busca por device_id
+    const { error } = await supabase
+      .from("login_sessions")
+      .update({ is_active: false })
+      .eq("device_id", sessionId)
+      .eq("user_id", userId);
+    
+    if (error) {
+      throw error;
+    }
+  } else {
+    // Tenta como UUID (id da sessão)
+    const { error } = await supabase
+      .from("login_sessions")
+      .update({ is_active: false })
+      .eq("id", sessionId)
+      .eq("user_id", userId);
 
-  if (error) {
-    throw error;
+    if (error) {
+      throw error;
+    }
   }
 }
 

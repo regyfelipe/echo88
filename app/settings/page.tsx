@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/contexts/theme-context";
+import { useToast } from "@/contexts/toast-context";
+import { CacheManager } from "@/components/settings/cache-manager";
 
 // Desabilitar prerender para evitar erro com ThemeProvider
 export const dynamic = "force-dynamic";
@@ -24,14 +26,16 @@ import {
   Eye,
   EyeOff,
   MessageSquare,
+  LogOut,
 } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Settings01Icon } from "@hugeicons/core-free-icons";
 
 export default function SettingsPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, logout } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const router = useRouter();
+  const { error: showError } = useToast();
   const [isPrivate, setIsPrivate] = useState(false);
   const [showOnlineStatus, setShowOnlineStatus] = useState(true);
   const [allowDMs, setAllowDMs] = useState(true);
@@ -121,7 +125,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("Error downloading data:", error);
-      alert("Erro ao baixar dados");
+      showError("Erro ao baixar dados", "Não foi possível baixar seus dados");
     }
   };
 
@@ -401,13 +405,40 @@ export default function SettingsPage() {
             </Button>
           </section>
 
+          {/* Sessão */}
+          <section className="rounded-2xl border border-border bg-card p-6 space-y-4">
+            <div className="flex items-center gap-3 mb-4">
+              <LogOut className="size-5 text-primary" />
+              <h2 className="text-lg font-semibold">Sessão</h2>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => router.push("/settings/sessions")}
+              >
+                <Settings className="size-4 mr-2" />
+                Gerenciar Sessões
+              </Button>
+              <Button
+                variant="destructive"
+                className="w-full justify-start"
+                onClick={async () => {
+                  if (confirm("Tem certeza que deseja sair?")) {
+                    await logout();
+                  }
+                }}
+              >
+                <LogOut className="size-4 mr-2" />
+                Sair da Conta
+              </Button>
+            </div>
+          </section>
+
           {/* Botão Salvar */}
           <div className="sticky bottom-0 bg-background/95 backdrop-blur pt-4 pb-2">
-            <Button
-              className="w-full"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
+            <Button className="w-full" onClick={handleSave} disabled={isSaving}>
               {isSaving ? "Salvando..." : "Salvar Configurações"}
             </Button>
           </div>
@@ -418,4 +449,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

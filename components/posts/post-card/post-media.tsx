@@ -1,9 +1,22 @@
 "use client";
 
-import { memo, useState } from "react";
-import { ChevronLeft, ChevronRight, Music, FileText } from "lucide-react";
+import { memo, useState, useRef, useEffect } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Music,
+  FileText,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize2,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { OptimizedImage } from "@/components/shared/optimized-image";
+import { usePreloadOptimizer } from "@/lib/utils/preload-optimizer";
 import type { MediaItem } from "./post-card";
 
 interface PostMediaProps {
@@ -38,9 +51,21 @@ export const PostMedia = memo(function PostMedia({
   const [isDragging, setIsDragging] = useState(false);
   const [mouseStart, setMouseStart] = useState<number | null>(null);
   const [mouseEnd, setMouseEnd] = useState<number | null>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const { preloadOnViewport, preloadOnHover } = usePreloadOptimizer();
 
   const hasMultipleMedia = gallery && gallery.length > 1;
   const minSwipeDistance = 50;
+
+  // Preload otimizado para próxima imagem na galeria
+  useEffect(() => {
+    if (gallery && gallery.length > currentMediaIndex + 1) {
+      const nextItem = gallery[currentMediaIndex + 1];
+      if (nextItem && nextItem.type === "image") {
+        preloadOnViewport(nextItem.url, imageRef.current || null, 0.1);
+      }
+    }
+  }, [currentMediaIndex, gallery, preloadOnViewport]);
 
   const nextMedia = () => {
     if (gallery && currentMediaIndex < gallery.length - 1) {
@@ -164,28 +189,50 @@ export const PostMedia = memo(function PostMedia({
     // Se tiver exatamente 2 imagens, mostrar lado a lado
     if (
       gallery.length === 2 &&
-      gallery.every((item) => item.type === "image")
+      gallery.every((item) => {
+        const isVideoUrl = item.url.match(/\.(mp4|webm|ogg|mov|avi)$/i);
+        return item.type === "image" && !isVideoUrl;
+      })
     ) {
       return (
         <div className="grid grid-cols-2 gap-2 mb-3 -mx-4">
-          {gallery.map((item, index) => (
-            <div
-              key={index}
-              className="relative rounded-lg overflow-hidden bg-muted min-h-[200px] max-h-[400px] flex items-center justify-center group cursor-pointer animate-in fade-in zoom-in duration-500"
-              style={{ animationDelay: `${index * 100}ms` }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onMediaClick();
-              }}
-            >
-              <img
-                src={item.url}
-                alt={content || `Imagem ${index + 1}`}
-                className="w-full h-auto max-h-[400px] object-contain transition-transform duration-700 ease-out group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            </div>
-          ))}
+          {gallery.map((item, index) => {
+            const isVideoUrl = item.url.match(/\.(mp4|webm|ogg|mov|avi)$/i);
+
+            return (
+              <div
+                key={index}
+                className="relative rounded-lg overflow-hidden bg-muted min-h-[200px] max-h-[400px] flex items-center justify-center group cursor-pointer animate-in fade-in zoom-in duration-500"
+                style={{ animationDelay: `${index * 100}ms` }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMediaClick();
+                }}
+              >
+                {isVideoUrl ? (
+                  <video
+                    src={item.url}
+                    poster={item.thumbnail}
+                    className="w-full h-full object-contain"
+                    controls
+                    onMouseDown={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <>
+                    <OptimizedImage
+                      src={item.url}
+                      alt={content || `Imagem ${index + 1}`}
+                      fill
+                      className="object-contain transition-transform duration-700 ease-out group-hover:scale-105"
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      quality={85}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       );
     }
@@ -242,22 +289,39 @@ export const PostMedia = memo(function PostMedia({
                       : "opacity 0.3s ease-out, transform 0.3s ease-out",
                   }}
                 >
-                  {item.type === "image" ? (
-                    <img
-                      src={item.url}
-                      alt={content || `Imagem ${index + 1}`}
-                      className="w-full h-auto max-h-[600px] object-contain select-none"
-                      draggable={false}
-                    />
-                  ) : (
-                    <video
-                      src={item.url}
-                      poster={item.thumbnail}
-                      className="w-full h-auto max-h-[600px] object-contain"
-                      controls
-                      onMouseDown={(e) => e.stopPropagation()}
-                    />
-                  )}
+                  {(() => {
+                    // Verificar se é realmente uma imagem (não vídeo)
+                    const isVideoUrl = item.url.match(
+                      /\.(mp4|webm|ogg|mov|avi)$/i
+                    );
+                    const isActuallyImage =
+                      item.type === "image" && !isVideoUrl;
+
+                    if (isActuallyImage) {
+                      return (
+                        <OptimizedImage
+                          src={item.url}
+                          alt={content || `Imagem ${index + 1}`}
+                          fill
+                          className="object-contain select-none"
+                          sizes="100vw"
+                          quality={90}
+                          priority={index === 0}
+                        />
+                      );
+                    } else {
+                      // Renderizar como vídeo
+                      return (
+                        <video
+                          src={item.url}
+                          poster={item.thumbnail}
+                          className="w-full h-auto max-h-[600px] object-contain"
+                          controls
+                          onMouseDown={(e) => e.stopPropagation()}
+                        />
+                      );
+                    }
+                  })()}
                 </div>
               );
             })}
@@ -335,13 +399,45 @@ export const PostMedia = memo(function PostMedia({
 
   switch (type) {
     case "image":
+      // Verificar se a URL é realmente uma imagem (não vídeo)
+      const isVideoUrl = media.url.match(/\.(mp4|webm|ogg|mov|avi)$/i);
+
+      // Se for vídeo, renderizar como vídeo mesmo que o tipo seja "image"
+      if (isVideoUrl) {
+        return (
+          <VideoPlayer
+            src={media.url}
+            thumbnail={media.thumbnail}
+            content={content}
+            onMediaClick={onMediaClick}
+          />
+        );
+      }
+
       return (
-        <div className="rounded-lg overflow-hidden mb-3 bg-muted -mx-4 group animate-in fade-in zoom-in duration-500">
+        <div
+          ref={imageRef}
+          className="rounded-lg overflow-hidden mb-3 bg-muted -mx-4 group animate-in fade-in zoom-in duration-500"
+          onMouseEnter={() => {
+            // Preload em hover para melhor UX
+            if (gallery && gallery.length > 1) {
+              gallery.slice(1, 3).forEach((item) => {
+                if (item.type === "image") {
+                  preloadOnHover(item.url, imageRef.current);
+                }
+              });
+            }
+          }}
+        >
           <div className="bg-muted relative flex items-center justify-center min-h-[300px] max-h-[600px]">
-            <img
+            <OptimizedImage
               src={media.url}
               alt={content || "Post image"}
-              className="w-full h-auto max-h-[600px] object-contain transition-transform duration-700 ease-out group-hover:scale-105"
+              fill
+              className="!relative object-contain transition-transform duration-700 ease-out group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+              quality={90}
+              priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
           </div>
@@ -350,16 +446,12 @@ export const PostMedia = memo(function PostMedia({
 
     case "video":
       return (
-        <div className="rounded-2xl overflow-hidden mb-3 bg-muted -mx-4 relative group shadow-sm">
-          <div className="aspect-video bg-muted">
-            <video
-              src={media.url}
-              poster={media.thumbnail}
-              className="w-full h-full object-cover"
-              controls
-            />
-          </div>
-        </div>
+        <VideoPlayer
+          src={media.url}
+          thumbnail={media.thumbnail}
+          content={content}
+          onMediaClick={onMediaClick}
+        />
       );
 
     case "audio":
@@ -413,3 +505,333 @@ export const PostMedia = memo(function PostMedia({
       return null;
   }
 });
+
+// Componente de Player de Vídeo Moderno
+function VideoPlayer({
+  src,
+  thumbnail,
+  content,
+  onMediaClick,
+}: {
+  src: string;
+  thumbnail?: string;
+  content?: string;
+  onMediaClick: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [volume, setVolume] = useState(1);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showControls, setShowControls] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const updateTime = () => setCurrentTime(video.currentTime);
+    const updateDuration = () => setDuration(video.duration);
+    const handleLoadedData = () => {
+      setIsLoading(false);
+      setDuration(video.duration);
+    };
+    const handlePlay = () => {
+      setIsPlaying(true);
+      setIsLoading(false);
+    };
+    const handlePause = () => setIsPlaying(false);
+    const handleWaiting = () => setIsLoading(true);
+    const handleCanPlay = () => {
+      setIsLoading(false);
+    };
+    const handlePlaying = () => {
+      setIsLoading(false);
+      setIsPlaying(true);
+    };
+
+    video.addEventListener("timeupdate", updateTime);
+    video.addEventListener("loadedmetadata", updateDuration);
+    video.addEventListener("loadeddata", handleLoadedData);
+    video.addEventListener("play", handlePlay);
+    video.addEventListener("playing", handlePlaying);
+    video.addEventListener("pause", handlePause);
+    video.addEventListener("waiting", handleWaiting);
+    video.addEventListener("canplay", handleCanPlay);
+
+    return () => {
+      video.removeEventListener("timeupdate", updateTime);
+      video.removeEventListener("loadedmetadata", updateDuration);
+      video.removeEventListener("loadeddata", handleLoadedData);
+      video.removeEventListener("play", handlePlay);
+      video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("pause", handlePause);
+      video.removeEventListener("waiting", handleWaiting);
+      video.removeEventListener("canplay", handleCanPlay);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isFullscreen) {
+      const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+      };
+      document.addEventListener("fullscreenchange", handleFullscreenChange);
+      return () => {
+        document.removeEventListener(
+          "fullscreenchange",
+          handleFullscreenChange
+        );
+      };
+    }
+  }, [isFullscreen]);
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlaying) {
+      video.pause();
+    } else {
+      video.play();
+    }
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const newVolume = parseFloat(e.target.value);
+    video.volume = newVolume;
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const newTime = parseFloat(e.target.value);
+    video.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const toggleFullscreen = () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (!document.fullscreenElement) {
+      container.requestFullscreen().then(() => setIsFullscreen(true));
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false));
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleMouseMove = () => {
+    setShowControls(true);
+    setIsHovered(true);
+
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (isPlaying) {
+        setShowControls(false);
+      }
+      setIsHovered(false);
+    }, 3000);
+  };
+
+  const handleMouseLeave = () => {
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    if (isPlaying) {
+      setShowControls(false);
+    }
+    setIsHovered(false);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="rounded-2xl overflow-hidden mb-3 bg-black -mx-4 relative group shadow-2xl"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => {
+        setShowControls(true);
+        setIsHovered(true);
+      }}
+    >
+      <div className="relative w-full bg-black">
+        <video
+          ref={videoRef}
+          src={src}
+          poster={thumbnail}
+          className="w-full h-auto max-h-[800px] object-contain"
+          playsInline
+          muted={isMuted}
+          onClick={(e) => {
+            e.stopPropagation();
+            togglePlay();
+          }}
+        />
+
+        {/* Loading Indicator - apenas quando realmente carregando */}
+        {isLoading && !isPlaying && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-10">
+            <Loader2 className="size-12 text-white animate-spin" />
+          </div>
+        )}
+
+        {/* Overlay com gradiente */}
+        <div
+          className={cn(
+            "absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 pointer-events-none z-20",
+            showControls || isHovered ? "opacity-100" : "opacity-0"
+          )}
+        />
+
+        {/* Controles do Player */}
+        <div
+          className={cn(
+            "absolute bottom-0 left-0 right-0 p-4 transition-all duration-300 z-30",
+            showControls || isHovered || !isPlaying
+              ? "translate-y-0 opacity-100"
+              : "translate-y-full opacity-0"
+          )}
+        >
+          {/* Barra de Progresso */}
+          <div className="mb-3 group/progress">
+            <input
+              type="range"
+              min="0"
+              max={duration || 0}
+              value={currentTime}
+              onChange={handleSeek}
+              className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer slider-thumb"
+              style={{
+                background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${
+                  (currentTime / duration) * 100
+                }%, rgba(255, 255, 255, 0.2) ${
+                  (currentTime / duration) * 100
+                }%, rgba(255, 255, 255, 0.2) 100%)`,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+
+          {/* Controles Inferiores */}
+          <div className="flex items-center gap-3">
+            {/* Play/Pause */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border-0 hover:scale-110 transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePlay();
+              }}
+            >
+              {isPlaying ? (
+                <Pause className="size-5" />
+              ) : (
+                <Play className="size-5 ml-0.5" />
+              )}
+            </Button>
+
+            {/* Volume */}
+            <div className="flex items-center gap-2 flex-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border-0 hover:scale-110 transition-all"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleMute();
+                }}
+              >
+                {isMuted || volume === 0 ? (
+                  <VolumeX className="size-5" />
+                ) : (
+                  <Volume2 className="size-5" />
+                )}
+              </Button>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={volume}
+                onChange={handleVolumeChange}
+                className="flex-1 h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer slider-thumb max-w-[100px]"
+                style={{
+                  background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${
+                    volume * 100
+                  }%, rgba(255, 255, 255, 0.2) ${
+                    volume * 100
+                  }%, rgba(255, 255, 255, 0.2) 100%)`,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            {/* Tempo */}
+            <div className="text-white text-xs font-medium bg-black/30 px-2 py-1 rounded backdrop-blur-sm">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </div>
+
+            {/* Fullscreen */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border-0 hover:scale-110 transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFullscreen();
+              }}
+            >
+              <Maximize2 className="size-5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Botão Play Central (apenas quando pausado, não carregando e controles não visíveis) */}
+        {!isPlaying && !isLoading && !showControls && !isHovered && (
+          <div
+            className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer group/play"
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlay();
+            }}
+          >
+            <div className="size-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover/play:scale-110 group-hover/play:bg-white/30 transition-all">
+              <Play className="size-10 text-white ml-1" />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

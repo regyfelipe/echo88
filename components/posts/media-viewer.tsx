@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface MediaViewerProps {
+export interface MediaViewerProps {
   isOpen: boolean;
   onClose: () => void;
   author: {

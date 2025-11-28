@@ -33,14 +33,19 @@ export const postsApi = {
     filters?: Omit<PostFilters, "type"> & {
       type?: "chronological" | "relevance" | "personalized";
     }
-  ): Promise<{ posts: Post[] }> {
+  ): Promise<{ posts: Post[]; hasMore?: boolean }> {
     const params = new URLSearchParams();
     if (filters?.limit) params.append("limit", filters.limit.toString());
     if (filters?.offset) params.append("offset", filters.offset.toString());
     if (filters?.type) params.append("type", filters.type);
 
-    const response = await fetch(`${API_BASE}/feed?${params}`);
-    return handleResponse<{ posts: Post[] }>(response);
+    const response = await fetch(`${API_BASE}/feed?${params}`, {
+      credentials: "include",
+    });
+    const data = await handleResponse<{ posts: Post[]; hasMore?: boolean }>(
+      response
+    );
+    return data;
   },
 
   /**
@@ -63,7 +68,38 @@ export const postsApi = {
    * Busca posts de um usuário
    */
   async getByUser(userId: string): Promise<{ posts: Post[] }> {
-    const response = await fetch(`${API_BASE}/user/${userId}`);
+    const response = await fetch(`${API_BASE}/user/${userId}`, {
+      credentials: "include",
+    });
+    return handleResponse<{ posts: Post[] }>(response);
+  },
+
+  /**
+   * Alias para getByUser (compatibilidade)
+   */
+  async getUserPosts(userId: string): Promise<{ posts: Post[] }> {
+    return this.getByUser(userId);
+  },
+
+  /**
+   * Busca posts do explore
+   */
+  async getExplore(query?: string): Promise<{ posts: Post[] }> {
+    const params = new URLSearchParams();
+    if (query) params.append("q", query);
+    const response = await fetch(`${API_BASE}/explore?${params}`, {
+      credentials: "include",
+    });
+    return handleResponse<{ posts: Post[] }>(response);
+  },
+
+  /**
+   * Busca posts de uma hashtag
+   */
+  async getHashtagPosts(hashtag: string): Promise<{ posts: Post[] }> {
+    const response = await fetch(`${API_BASE}/hashtag/${hashtag}`, {
+      credentials: "include",
+    });
     return handleResponse<{ posts: Post[] }>(response);
   },
 
@@ -71,7 +107,9 @@ export const postsApi = {
    * Busca um post por ID
    */
   async getById(postId: string): Promise<Post> {
-    const response = await fetch(`${API_BASE}/${postId}`);
+    const response = await fetch(`${API_BASE}/${postId}`, {
+      credentials: "include",
+    });
     return handleResponse<Post>(response);
   },
 
@@ -83,8 +121,39 @@ export const postsApi = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+      credentials: "include",
     });
     return handleResponse<Post>(response);
+  },
+
+  /**
+   * Cria um novo post com FormData (para upload de arquivos)
+   */
+  async createPost(formData: FormData): Promise<Post> {
+    const response = await fetch(`${API_BASE}/create`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+    return handleResponse<Post>(response);
+  },
+
+  /**
+   * Deleta um post
+   */
+  async deletePost(postId: string): Promise<void> {
+    const response = await fetch(`${API_BASE}/${postId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new PostsApiError(
+        errorData.error || "Erro ao deletar post",
+        response.status,
+        errorData
+      );
+    }
   },
 
   /**
@@ -93,6 +162,18 @@ export const postsApi = {
   async like(postId: string): Promise<{ liked: boolean; likes: number }> {
     const response = await fetch(`${API_BASE}/${postId}/like`, {
       method: "POST",
+      credentials: "include",
+    });
+    return handleResponse<{ liked: boolean; likes: number }>(response);
+  },
+
+  /**
+   * Remove curtida de um post
+   */
+  async unlikePost(postId: string): Promise<{ liked: boolean; likes: number }> {
+    const response = await fetch(`${API_BASE}/${postId}/like`, {
+      method: "DELETE",
+      credentials: "include",
     });
     return handleResponse<{ liked: boolean; likes: number }>(response);
   },
@@ -103,6 +184,25 @@ export const postsApi = {
   async save(postId: string): Promise<{ saved: boolean }> {
     const response = await fetch(`${API_BASE}/${postId}/save`, {
       method: "POST",
+      credentials: "include",
+    });
+    return handleResponse<{ saved: boolean }>(response);
+  },
+
+  /**
+   * Alias para save (compatibilidade)
+   */
+  async savePost(postId: string): Promise<{ saved: boolean }> {
+    return this.save(postId);
+  },
+
+  /**
+   * Remove post dos salvos
+   */
+  async unsavePost(postId: string): Promise<{ saved: boolean }> {
+    const response = await fetch(`${API_BASE}/${postId}/save`, {
+      method: "DELETE",
+      credentials: "include",
     });
     return handleResponse<{ saved: boolean }>(response);
   },

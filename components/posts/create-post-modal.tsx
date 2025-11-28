@@ -16,7 +16,7 @@ import { X, Image as ImageIcon, Video, Music, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth-context";
 
-interface CreatePostModalProps {
+export interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
 }

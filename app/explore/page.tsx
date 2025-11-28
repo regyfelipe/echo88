@@ -29,20 +29,11 @@ import {
   PostCardSkeleton,
   MediaViewerSkeleton,
 } from "@/components/shared/loading-skeleton";
+import { OptimizedImage } from "@/components/shared/optimized-image";
 import Link from "next/link";
 
-// Lazy load componentes pesados
-const PostCard = lazy(() =>
-  import("@/components/posts/post-card").then((mod) => ({
-    default: mod.PostCard,
-  }))
-);
-
-const MediaViewer = lazy(() =>
-  import("@/components/posts/media-viewer").then((mod) => ({
-    default: mod.MediaViewer,
-  }))
-);
+// Componentes lazy já importados de @/components/lazy
+import { PostCard, MediaViewer } from "@/components/lazy";
 
 interface ExplorePost {
   id: string;
@@ -299,12 +290,15 @@ export default function ExplorePage() {
                       href={`/profile/${user.username}`}
                       className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors min-w-[120px] shrink-0"
                     >
-                      <div className="size-16 rounded-full bg-primary/20 flex items-center justify-center">
+                      <div className="size-16 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
                         {user.avatar ? (
-                          <img
+                          <OptimizedImage
                             src={user.avatar}
                             alt={user.username}
-                            className="size-16 rounded-full object-cover"
+                            width={64}
+                            height={64}
+                            className="rounded-full object-cover"
+                            quality={80}
                           />
                         ) : (
                           <span className="text-primary font-semibold text-xl">
@@ -522,13 +516,15 @@ export default function ExplorePage() {
                         <>
                           {/* Usar thumbnail se disponível, senão usar a URL do vídeo como fallback */}
                           {thumbnailUrl ? (
-                            <img
+                            <OptimizedImage
                               src={thumbnailUrl}
                               alt={
                                 post.content || `Vídeo de ${post.author.name}`
                               }
-                              className="w-full h-full object-cover transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.08] group-active:scale-[1.05]"
-                              loading="lazy"
+                              fill
+                              className="!relative object-cover transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.08] group-active:scale-[1.05]"
+                              sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                              quality={85}
                             />
                           ) : (
                             <div className="w-full h-full bg-muted/50 flex items-center justify-center">
@@ -560,11 +556,13 @@ export default function ExplorePage() {
                         </>
                       ) : hasVideoInGallery ? (
                         <>
-                          <img
-                            src={thumbnailUrl || imageUrl}
+                          <OptimizedImage
+                            src={thumbnailUrl || imageUrl || ""}
                             alt={post.content || `Post de ${post.author.name}`}
-                            className="w-full h-full object-cover transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.08] group-active:scale-[1.05]"
-                            loading="lazy"
+                            fill
+                            className="!relative object-cover transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.08] group-active:scale-[1.05]"
+                            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                            quality={85}
                           />
                           {/* Indicador de vídeo na galeria */}
                           <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-black/70 backdrop-blur-md px-2.5 py-1.5 rounded-full shadow-lg border border-white/10">
@@ -578,11 +576,13 @@ export default function ExplorePage() {
                           </div>
                         </>
                       ) : (
-                        <img
-                          src={imageUrl}
+                        <OptimizedImage
+                          src={imageUrl || ""}
                           alt={post.content || `Post de ${post.author.name}`}
-                          className="w-full h-full object-cover transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.08] group-active:scale-[1.05]"
-                          loading="lazy"
+                          fill
+                          className="!relative object-cover transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.08] group-active:scale-[1.05]"
+                          sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                          quality={85}
                         />
                       )}
 

@@ -15,6 +15,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/contexts/toast-context";
 
 interface Session {
   id: string;
@@ -29,6 +30,7 @@ interface Session {
 }
 
 export default function SessionsPage() {
+  const { error: showError } = useToast();
   const { logoutAll } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,7 +67,7 @@ export default function SessionsPage() {
       await logoutAll();
     } catch (error) {
       console.error("Error logging out all:", error);
-      alert("Erro ao fazer logout de todos os dispositivos");
+      showError("Erro ao fazer logout", "Não foi possível fazer logout de todos os dispositivos");
     } finally {
       setIsLoggingOutAll(false);
     }

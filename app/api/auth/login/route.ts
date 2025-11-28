@@ -2,22 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCredentials, addLoginSession } from "@/lib/db/users-supabase";
 import { createSession, setAuthCookie } from "@/lib/auth/session";
 import { randomBytes } from "crypto";
+import { withSecurityAndValidation } from "@/lib/security/request-wrapper";
+import { loginSchema } from "@/lib/validation/schemas";
+import type { z } from "zod";
 
 /**
  * POST /api/auth/login
  * Autentica um usuário e cria uma sessão
  */
-export async function POST(request: NextRequest) {
+async function loginHandler(
+  request: NextRequest,
+  context: { body?: z.infer<typeof loginSchema> }
+) {
   try {
-    const body = await request.json();
-    const { emailOrUsername, password } = body;
-
-    if (!emailOrUsername || !password) {
+    // Body é garantido pelo wrapper quando bodySchema é fornecido
+    if (!context.body) {
       return NextResponse.json(
-        { error: "Email/username e senha são obrigatórios" },
+        { error: "Dados de login são obrigatórios" },
         { status: 400 }
       );
     }
+
+    const { emailOrUsername, password } = context.body;
 
     // Verifica credenciais
     const user = await verifyCredentials(emailOrUsername, password);
@@ -86,3 +92,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Erro ao fazer login" }, { status: 500 });
   }
 }
+
+// Export com segurança e validação
+// Compatível com Next.js 15 (params pode ser Promise)
+export const POST = withSecurityAndValidation(loginHandler, {
+  bodySchema: loginSchema,
+});

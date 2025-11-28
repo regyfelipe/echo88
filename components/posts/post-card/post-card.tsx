@@ -8,6 +8,8 @@ import { PostMedia } from "./post-media";
 import { PostActions } from "./post-actions";
 import { CollectionSelectorModal } from "@/components/collections/collection-selector-modal";
 import { postsApi } from "@/lib/api/posts";
+import { useToast } from "@/contexts/toast-context";
+import { SanitizedContent } from "@/components/shared/sanitized-content";
 
 export type PostType =
   | "text"
@@ -84,6 +86,7 @@ export function PostCard({
   const [isLoading, setIsLoading] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const { toast, success, error: showError, info } = useToast();
 
   // Verificar status de dislike e favorite ao carregar
   useEffect(() => {
@@ -113,13 +116,19 @@ export function PostCard({
           setIsDisliked(false);
         }
         setLikes((prev) => (data.liked ? prev + 1 : Math.max(prev - 1, 0)));
+        if (data.liked) {
+          success("Post curtido!", "Você curtiu este post");
+        } else {
+          info("Curtida removida");
+        }
       } catch (error) {
         console.error("Error liking post:", error);
+        showError("Erro ao curtir post", "Tente novamente mais tarde");
       } finally {
         setIsLoading(false);
       }
     },
-    [id, isLoading, isDisliked]
+    [id, isLoading, isDisliked, success, showError, info]
   );
 
   // Função para não curtir/remover não curtir
@@ -158,8 +167,12 @@ export function PostCard({
         try {
           const data = await postsApi.save(id);
           setIsSaved(data.saved);
+          if (!data.saved) {
+            success("Post removido", "O post foi removido das suas coleções");
+          }
         } catch (error) {
           console.error("Error saving post:", error);
+          showError("Erro ao salvar post", "Tente novamente mais tarde");
         } finally {
           setIsLoading(false);
         }
@@ -168,7 +181,7 @@ export function PostCard({
         setIsCollectionModalOpen(true);
       }
     },
-    [id, isSaved, isLoading]
+    [id, isSaved, isLoading, success, showError]
   );
 
   // Função para compartilhar
@@ -189,13 +202,14 @@ export function PostCard({
         } else {
           // Fallback: copiar para clipboard
           await navigator.clipboard.writeText(data.shareUrl);
-          alert("Link copiado para a área de transferência!");
+          success("Link copiado!", "O link foi copiado para a área de transferência");
         }
       } catch (error) {
         console.error("Error sharing post:", error);
+        showError("Erro ao compartilhar", "Não foi possível compartilhar o post");
       }
     },
-    [id, author.username, content]
+    [id, author.username, content, success, showError]
   );
 
   // Função para registrar visualização
@@ -258,9 +272,12 @@ export function PostCard({
 
         {/* Content */}
         {content && (
-          <p className="text-sm mb-2.5 whitespace-pre-wrap leading-relaxed text-foreground/90 animate-in fade-in duration-500 delay-75">
-            {content}
-          </p>
+          <SanitizedContent
+            content={content}
+            type="post"
+            className="text-sm mb-2.5 whitespace-pre-wrap leading-relaxed text-foreground/90 animate-in fade-in duration-500 delay-75"
+            as="p"
+          />
         )}
 
         {/* Media */}
@@ -331,7 +348,7 @@ export function PostCard({
           onPostAdded={async () => {
             setIsCollectionModalOpen(false);
             setIsSaved(true);
-            // Opcional: atualizar contador de saves
+            // Toast já é mostrado pelo CollectionSelectorModal
           }}
         />
       )}

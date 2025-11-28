@@ -7,6 +7,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Navigation03Icon } from "@hugeicons/core-free-icons";
 import { useAuth } from "@/contexts/auth-context";
 import { formatTextWithHashtagsAndMentions } from "@/lib/utils/hashtags-mentions";
+import { sanitizePostContent } from "@/lib/utils/sanitize";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ interface Comment {
   replies?: Comment[];
 }
 
-interface CommentsSectionProps {
+export interface CommentsSectionProps {
   postId: string;
   onCommentAdded?: () => void;
 }
@@ -232,7 +233,9 @@ export function CommentsSection({ postId, onCommentAdded }: CommentsSectionProps
                         </span>
                       </div>
                       <div className="text-sm whitespace-pre-wrap break-words">
-                        {formatTextWithHashtagsAndMentions(comment.content)}
+                        {formatTextWithHashtagsAndMentions(
+                          sanitizePostContent(comment.content)
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-4 mt-1 ml-2">
@@ -327,7 +330,9 @@ export function CommentsSection({ postId, onCommentAdded }: CommentsSectionProps
                                   </span>
                                 </div>
                                 <div className="text-xs whitespace-pre-wrap break-words">
-                                  {formatTextWithHashtagsAndMentions(reply.content)}
+                                  {formatTextWithHashtagsAndMentions(
+                                    sanitizePostContent(reply.content)
+                                  )}
                                 </div>
                               </div>
                             </div>

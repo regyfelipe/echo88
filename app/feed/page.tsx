@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState, useCallback, lazy, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { InlineAd } from "@/components/shared/google-ad";
 import { PostCardSkeleton } from "@/components/shared/loading-skeleton";
-import { postsApi } from "@/lib/api/posts";
+import { PostCard, StoriesBar } from "@/components/lazy";
 import { useFeedPreferences } from "@/lib/hooks/use-feed-preferences";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { useToast } from "@/contexts/toast-context";
+import { useAuth } from "@/contexts/auth-context";
+import { useInfiniteFeedPosts } from "@/lib/hooks/use-posts";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Clock01Icon,
@@ -20,13 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-
-// Lazy load componentes pesados
-const PostCard = lazy(() =>
-  import("@/components/posts/post-card").then((mod) => ({
-    default: mod.PostCard,
-  }))
-);
 
 interface Post {
   id: string;
@@ -60,117 +58,77 @@ interface Post {
   isSaved?: boolean;
 }
 
-const CACHE_KEY = "echo88_feed_cache";
-const CACHE_TIMESTAMP_KEY = "echo88_feed_cache_timestamp";
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-
 export default function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const feedContainerRef = useRef<HTMLElement | null>(null);
   const {
     feedType,
     setFeedType,
     isLoading: isLoadingPreferences,
   } = useFeedPreferences();
+  const { success, error: showError } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
 
-  // Carregar do cache imediatamente
-  useEffect(() => {
-    const cachedData = localStorage.getItem(CACHE_KEY);
-    const cachedTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+  // React Query com infinite scroll
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isRefetching,
+    refetch,
+    error,
+  } = useInfiniteFeedPosts({
+    limit: 20,
+    sort: feedType,
+    enabled: !!user && !authLoading,
+  });
 
-    if (cachedData && cachedTimestamp) {
-      const timestamp = parseInt(cachedTimestamp, 10);
-      const now = Date.now();
+  // Flatten posts de todas as páginas
+  const posts: Post[] =
+    data?.pages.flatMap(
+      (page: { posts: Post[]; hasMore: boolean; nextOffset: number }) =>
+        page.posts || []
+    ) || [];
 
-      // Se o cache é recente (menos de 5 minutos), usar imediatamente
-      if (now - timestamp < CACHE_DURATION) {
-        try {
-          const cachedPosts = JSON.parse(cachedData);
-          setPosts(cachedPosts);
-        } catch (e) {
-          console.error("Error parsing cached posts:", e);
-        }
-      }
-    } else {
-      // Se não tem cache, mostrar loading
-      setIsLoading(true);
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+    success("Feed atualizado!", "Novos posts foram carregados");
+  }, [refetch, success]);
+
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    // Sempre buscar atualizações em background
-    fetchPosts(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [feedType]);
+  // Pull to refresh
+  const {
+    containerRef: pullToRefreshRef,
+    isRefreshing: isPullRefreshing,
+    pullDistance,
+    progress,
+  } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80,
+    disabled: isLoading || isRefetching,
+  });
 
-  const fetchPosts = async (showRefreshing = false, forceRefresh = false) => {
-    try {
-      if (showRefreshing) {
-        setIsRefreshing(true);
-      } else {
-        // Só mostrar loading se não tiver posts em cache
-        setPosts((currentPosts) => {
-          if (currentPosts.length === 0 && !forceRefresh) {
-            setIsLoading(true);
-          }
-          return currentPosts;
-        });
-      }
-      setError(null);
+  // Infinite scroll
+  const { sentinelRef } = useInfiniteScroll({
+    hasMore: hasNextPage ?? false,
+    isLoading: isFetchingNextPage,
+    onLoadMore: handleLoadMore,
+    threshold: 200,
+  });
 
-      const data = await postsApi.getFeed({
-        limit: undefined,
-        offset: undefined,
-        type: feedType,
-      });
-      const newPosts = data.posts || [];
-
-      // Atualizar posts e verificar mudanças
-      setPosts((currentPosts) => {
-        // Verificar se há mudanças antes de atualizar
-        const hasChanges =
-          JSON.stringify(currentPosts) !== JSON.stringify(newPosts);
-
-        if (hasChanges || forceRefresh || currentPosts.length === 0) {
-          // Salvar no cache
-          localStorage.setItem(CACHE_KEY, JSON.stringify(newPosts));
-          localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
-          return newPosts;
-        }
-        return currentPosts;
-      });
-    } catch (err) {
-      console.error("Error fetching posts:", err);
-      // Se houver erro e não tiver posts, mostrar erro
-      setPosts((currentPosts) => {
-        if (currentPosts.length === 0) {
-          const errorMessage =
-            err instanceof Error ? err.message : "Failed to load posts";
-          setError(errorMessage);
-        }
-        return currentPosts;
-      });
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    fetchPosts(true, true);
-  };
-
-  if (isLoading) {
+  if (isLoading && posts.length === 0) {
     return (
       <div className="flex min-h-screen flex-col bg-background pb-28">
         <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/80 animate-in fade-in slide-in-from-top-4 duration-700 ease-out shadow-sm">
           <div className="mx-auto flex max-w-2xl items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3">
-            <h1
-              onClick={handleRefresh}
-              className="text-lg sm:text-xl font-bold transition-all duration-500 ease-out cursor-pointer hover:scale-105 active:scale-95 select-none"
-              title="Clique para atualizar"
-            >
-              Echo88
+            <h1 className="text-lg sm:text-xl font-bold transition-all duration-500 ease-out">
+              Aivlo
             </h1>
           </div>
         </header>
@@ -195,14 +153,19 @@ export default function FeedPage() {
               className="text-lg sm:text-xl font-bold transition-all duration-500 ease-out cursor-pointer hover:scale-105 active:scale-95 select-none"
               title="Clique para atualizar"
             >
-              Echo88
+              Aivlo
             </h1>
           </div>
         </header>
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-destructive mb-2">Erro ao carregar posts</p>
-            <p className="text-muted-foreground text-sm">{error}</p>
+            <p className="text-muted-foreground text-sm">
+              {error instanceof Error ? error.message : "Erro desconhecido"}
+            </p>
+            <Button onClick={handleRefresh} className="mt-4">
+              Tentar novamente
+            </Button>
           </div>
         </main>
         <BottomNavigation />
@@ -211,7 +174,33 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-28">
+    <div className="flex min-h-screen flex-col bg-background pb-28 relative">
+      {/* Pull to refresh indicator */}
+      {pullDistance > 0 && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center py-4 pointer-events-none">
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative size-10">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+              <div
+                className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent"
+                style={{
+                  transform: `rotate(${progress * 3.6}deg)`,
+                  transition: "transform 0.1s ease-out",
+                }}
+              />
+              {progress >= 100 && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {progress >= 100 ? "Solte para atualizar" : "Puxe para atualizar"}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/80 animate-in fade-in slide-in-from-top-4 duration-700 ease-out shadow-sm">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3">
@@ -220,11 +209,11 @@ export default function FeedPage() {
             className={cn(
               "text-lg sm:text-xl font-bold transition-all duration-500 ease-out",
               "cursor-pointer hover:scale-105 active:scale-95 select-none",
-              isRefreshing && "animate-spin"
+              isRefetching && "animate-spin"
             )}
             title="Clique para atualizar"
           >
-            Echo88
+            Aivlo
           </h1>
           <div className="flex items-center gap-2">
             <DropdownMenu>
@@ -294,8 +283,23 @@ export default function FeedPage() {
         </div>
       </header>
 
+      {/* Stories Bar */}
+      <Suspense fallback={<div className="h-24" />}>
+        <StoriesBar />
+      </Suspense>
+
       {/* Feed */}
-      <main className="flex-1">
+      <main
+        className="flex-1 overflow-y-auto"
+        ref={(node) => {
+          feedContainerRef.current = node;
+          if (node && pullToRefreshRef) {
+            (
+              pullToRefreshRef as React.MutableRefObject<HTMLElement | null>
+            ).current = node;
+          }
+        }}
+      >
         <div className="mx-auto max-w-2xl px-2 sm:px-4">
           {posts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 sm:py-20 text-center animate-in fade-in zoom-in-95 duration-700">
@@ -310,26 +314,50 @@ export default function FeedPage() {
               </p>
             </div>
           ) : (
-            posts.map((post, index) => (
-              <div key={post.id || index}>
-                <div
-                  className="animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out mb-4"
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                    animationFillMode: "both",
-                  }}
-                >
-                  <Suspense fallback={<PostCardSkeleton />}>
-                    <PostCard {...post} />
-                  </Suspense>
-                </div>
+            <>
+              {posts.map((post, index) => (
+                <div key={post.id || index}>
+                  <div
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out mb-4"
+                    style={{
+                      animationDelay: `${index * 100}ms`,
+                      animationFillMode: "both",
+                    }}
+                  >
+                    <Suspense fallback={<PostCardSkeleton />}>
+                      <PostCard {...post} />
+                    </Suspense>
+                  </div>
 
-                {/* Anúncio do Google após cada 3 postagens */}
-                {(index + 1) % 3 === 0 && index < posts.length - 1 && (
-                  <InlineAd />
-                )}
-              </div>
-            ))
+                  {/* Anúncio do Google após cada 3 postagens */}
+                  {(index + 1) % 3 === 0 && index < posts.length - 1 && (
+                    <InlineAd />
+                  )}
+                </div>
+              ))}
+
+              {/* Sentinel para infinite scroll */}
+              <div ref={sentinelRef} className="h-4" />
+
+              {/* Loading mais posts */}
+              {isFetchingNextPage && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="size-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="ml-3 text-sm text-muted-foreground">
+                    Carregando mais posts...
+                  </span>
+                </div>
+              )}
+
+              {/* Fim dos posts */}
+              {!hasNextPage && posts.length > 0 && (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-muted-foreground text-sm">
+                    Você viu todos os posts!
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>

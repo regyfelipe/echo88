@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth/session";
+import { withRateLimit, getUserIdFromRequest } from "@/lib/rate-limit/rate-limit-decorator";
 
-export async function GET(request: NextRequest) {
+// Handler original
+async function feedHandler(request: NextRequest) {
   try {
     const supabase = createAdminClient();
     const session = await getSession();
 
     // Buscar posts
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const offset = parseInt(searchParams.get("offset") || "0");
     const feedType = searchParams.get("type") || "chronological"; // chronological, relevance, personalized
 
     let postsQuery = supabase.from("posts").select("*");
@@ -47,7 +50,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: posts, error: postsError } = await postsQuery.limit(limit);
+    const { data: posts, error: postsError } = await postsQuery
+      .range(offset, offset + limit - 1)
+      .limit(limit);
 
     // Se for relevância, ordenar manualmente por score completo
     interface PostWithCounts {
@@ -219,7 +224,14 @@ export async function GET(request: NextRequest) {
         };
       }) || [];
 
-    return NextResponse.json({ posts: formattedPosts });
+    // Verificar se há mais posts
+    const hasMore = formattedPosts.length === limit;
+    
+    return NextResponse.json({ 
+      posts: formattedPosts,
+      hasMore,
+      nextOffset: hasMore ? offset + limit : null,
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error in feed route:", error);
@@ -267,3 +279,9 @@ function getTimeAgo(dateString: string): string {
   const diffInYears = Math.floor(diffInDays / 365);
   return `${diffInYears}ano${diffInYears > 1 ? "s" : ""}`;
 }
+
+// Export com rate limiting
+export const GET = withRateLimit(feedHandler, {
+  type: "feed",
+  getUserId: getUserIdFromRequest,
+});

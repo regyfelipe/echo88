@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,17 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { compressImage, compressImages } from "@/lib/utils/image-compression";
-import { ImageEditor } from "@/components/shared/image-editor";
+import { ImageEditor } from "@/components/lazy";
+import { ModalFallback } from "@/components/shared/lazy-fallback";
 
-type MediaType = "text" | "image" | "video" | "audio" | "gallery" | "document" | null;
+type MediaType =
+  | "text"
+  | "image"
+  | "video"
+  | "audio"
+  | "gallery"
+  | "document"
+  | null;
 
 interface GalleryItem {
   url: string;
@@ -44,9 +52,13 @@ export default function CreatePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showImageEditor, setShowImageEditor] = useState(false);
   const [editingImage, setEditingImage] = useState<File | null>(null);
-  const [editingImageType, setEditingImageType] = useState<"single" | "gallery" | null>(null);
-  const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null);
-  
+  const [editingImageType, setEditingImageType] = useState<
+    "single" | "gallery" | null
+  >(null);
+  const [editingImageIndex, setEditingImageIndex] = useState<number | null>(
+    null
+  );
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
@@ -132,15 +144,17 @@ export default function CreatePage() {
     }
   };
 
-  const handleGallerySelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGallerySelect = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       setMediaType("gallery");
-      
+
       // Comprimir imagens automaticamente
       try {
         const compressedFiles = await compressImages(files);
-        
+
         compressedFiles.forEach((file, index) => {
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -178,7 +192,11 @@ export default function CreatePage() {
       setEditingImageType("single");
       setEditingImageIndex(null);
       setShowImageEditor(true);
-    } else if (type === "gallery" && index !== undefined && gallery[index]?.file) {
+    } else if (
+      type === "gallery" &&
+      index !== undefined &&
+      gallery[index]?.file
+    ) {
       setEditingImage(gallery[index].file!);
       setEditingImageType("gallery");
       setEditingImageIndex(index);
@@ -247,7 +265,12 @@ export default function CreatePage() {
     if (!user) return;
 
     // Validação
-    if (!content.trim() && !mediaFile && gallery.length === 0 && !documentFile) {
+    if (
+      !content.trim() &&
+      !mediaFile &&
+      gallery.length === 0 &&
+      !documentFile
+    ) {
       setError("Adicione conteúdo, mídia ou documento ao post");
       return;
     }
@@ -257,7 +280,7 @@ export default function CreatePage() {
 
     try {
       const formData = new FormData();
-      
+
       // Adiciona conteúdo
       if (content.trim()) {
         formData.append("content", content.trim());
@@ -302,7 +325,7 @@ export default function CreatePage() {
       // Upload com progress usando XMLHttpRequest
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        
+
         xhr.upload.addEventListener("progress", (e) => {
           if (e.lengthComputable) {
             const progress = (e.loaded / e.total) * 100;
@@ -327,7 +350,11 @@ export default function CreatePage() {
           } else {
             try {
               const data = JSON.parse(xhr.responseText);
-              reject(new Error(data.error || `Upload failed with status ${xhr.status}`));
+              reject(
+                new Error(
+                  data.error || `Upload failed with status ${xhr.status}`
+                )
+              );
             } catch {
               reject(new Error(`Upload failed with status ${xhr.status}`));
             }
@@ -404,7 +431,9 @@ export default function CreatePage() {
               </div>
               <div>
                 <p className="font-semibold text-sm">{user.fullName}</p>
-                <p className="text-xs text-muted-foreground">@{user.username}</p>
+                <p className="text-xs text-muted-foreground">
+                  @{user.username}
+                </p>
               </div>
             </div>
 
@@ -567,7 +596,11 @@ export default function CreatePage() {
                         <X className="size-4" />
                       </Button>
                     </div>
-                    <audio src={mediaPreview || undefined} controls className="w-full h-8" />
+                    <audio
+                      src={mediaPreview || undefined}
+                      controls
+                      className="w-full h-8"
+                    />
                   </div>
                 )}
                 {mediaType === "document" && documentPreview && (
@@ -577,9 +610,13 @@ export default function CreatePage() {
                         <FileText className="size-8 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-semibold">{documentName || "Documento"}</p>
+                        <p className="text-sm font-semibold">
+                          {documentName || "Documento"}
+                        </p>
                         <p className="text-xs text-muted-foreground">
-                          {documentFile ? `${(documentFile.size / 1024).toFixed(1)} KB` : ""}
+                          {documentFile
+                            ? `${(documentFile.size / 1024).toFixed(1)} KB`
+                            : ""}
                         </p>
                       </div>
                       <Button
@@ -693,18 +730,19 @@ export default function CreatePage() {
 
       {/* Image Editor Modal */}
       {showImageEditor && editingImage && (
-        <ImageEditor
-          image={editingImage}
-          onSave={handleSaveEditedImage}
-          onCancel={() => {
-            setShowImageEditor(false);
-            setEditingImage(null);
-            setEditingImageType(null);
-            setEditingImageIndex(null);
-          }}
-        />
+        <Suspense fallback={<ModalFallback />}>
+          <ImageEditor
+            image={editingImage}
+            onSave={handleSaveEditedImage}
+            onCancel={() => {
+              setShowImageEditor(false);
+              setEditingImage(null);
+              setEditingImageType(null);
+              setEditingImageIndex(null);
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );
 }
-

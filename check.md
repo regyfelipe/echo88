@@ -1,4 +1,4 @@
-# ✅ Checklist do Projeto Echo88
+# ✅ Checklist do Projeto Aivlo
 
 ## 📱 Páginas (Pages)
 
@@ -7,8 +7,13 @@
 - [ X ] Página inicial (Home) - `/`
 - [ X ] Página de Login - `/login`
 - [ X ] Página de Signup - `/signup`
+- [ X ] Página de Forgot Password - `/forgot-password` ✅
+- [ X ] Página de Reset Password - `/reset-password` ✅
+- [ X ] Página de Verify Email - `/verify-email` ✅
 - [ X ] Formulário de Login (`LoginForm`)
 - [ X ] Formulário de Signup (`SignupForm`)
+- [ X ] Formulário de Forgot Password (`ForgotPasswordForm`) ✅
+- [ X ] Formulário de Reset Password (`ResetPasswordForm`) ✅
 
 ### Páginas Principais
 
@@ -17,6 +22,13 @@
 - [ X ] Create - `/create`
 - [ X ] Notifications - `/notifications`
 - [ X ] Profile - `/profile`
+- [ X ] Messages - `/messages` ✅
+- [ X ] Messages por usuário - `/messages/[userId]` ✅
+- [ X ] Hashtag - `/hashtag/[hashtag]` ✅
+- [ X ] Settings - `/settings` ✅
+- [ X ] Settings/Blocked - `/settings/blocked` ✅
+- [ X ] Settings/Muted - `/settings/muted` ✅
+- [ X ] Settings/Sessions - `/settings/sessions` ✅
 
 ## 🧩 Componentes
 
@@ -26,6 +38,13 @@
 - [ X ] `PostCard` - Card de postagem
 - [ X ] `PostDetailModal` - Modal de detalhes do post
 - [ X ] `CreatePostModal` - Modal para criar post
+- [ X ] `MediaViewer` - Visualizador de mídia único ✅
+- [ X ] `CommentsSection` - Seção de comentários completa ✅
+- [ X ] `EditProfileModal` - Modal de edição de perfil ✅
+- [ X ] `CollectionSelectorModal` - Modal de seleção de coleções ✅
+- [ X ] `FileUpload` - Componente de upload de arquivos ✅
+- [ X ] `ImageEditor` - Editor de imagens integrado ✅
+- [ X ] `LoadingSkeleton` - Skeleton de carregamento ✅
 - [ X ] `GoogleAd` - Componente de anúncios Google AdSense
 - [ X ] `InlineAd` - Anúncio inline
 - [ X ] `BannerAd` - Anúncio banner
@@ -37,6 +56,9 @@
 - [ X ] `Field` - Campo de formulário
 - [ X ] `Label` - Label de formulário
 - [ X ] `Separator` - Separador visual
+- [ X ] `Dialog` - Modal/Dialog ✅
+- [ X ] `DropdownMenu` - Menu dropdown ✅
+- [ X ] `Textarea` - Área de texto ✅
 
 ## 🎨 Funcionalidades do Feed
 
@@ -348,9 +370,17 @@
 
 - [ X ] Página de Login
 - [ X ] Página de Signup
+- [ X ] Página de Forgot Password ✅
+- [ X ] Página de Reset Password ✅
+- [ X ] Página de Verify Email ✅
 - [ X ] Formulários de autenticação
 - [ X ] Validação de campos
 - [ X ] Links para alternar entre login/signup
+- [ X ] Recuperação de senha por email ✅
+- [ X ] Verificação de email ✅
+- [ X ] Sessões e tokens JWT ✅
+- [ X ] Logout em todos os dispositivos ✅
+- [ X ] Histórico de login (sessões) ✅
 
 ## 📦 Estrutura de Arquivos
 
@@ -363,6 +393,115 @@
 - [ X ] Configuração ESLint
 - [ X ] Configuração Tailwind
 - [ X ] Configuração PostCSS
+
+## 🔌 APIs Implementadas
+
+### Autenticação
+
+- [ X ] `/api/auth/login` - Login de usuário
+- [ X ] `/api/auth/signup` - Cadastro de usuário
+- [ X ] `/api/auth/logout` - Logout
+- [ X ] `/api/auth/logout-all` - Logout em todos os dispositivos
+- [ X ] `/api/auth/me` - Obter usuário atual
+- [ X ] `/api/auth/forgot-password` - Recuperação de senha
+- [ X ] `/api/auth/reset-password` - Redefinir senha
+- [ X ] `/api/auth/verify-email` - Verificar email
+- [ X ] `/api/auth/resend-verification` - Reenviar verificação
+- [ X ] `/api/auth/sessions` - Gerenciar sessões
+- [ X ] `/api/auth/check-availability` - Verificar disponibilidade (username/email)
+- [ X ] `/api/auth/update-avatar` - Atualizar avatar
+- [ X ] `/api/auth/update-avatar-signup` - Atualizar avatar no signup
+- [ X ] `/api/auth/get-user-email` - Obter email do usuário
+
+### Posts
+
+- [ X ] `/api/posts/create` - Criar post
+- [ X ] `/api/posts/feed` - Feed de posts
+- [ X ] `/api/posts/popular` - Posts populares
+- [ X ] `/api/posts/trending` - Posts em alta
+- [ X ] `/api/posts/user/[userId]` - Posts do usuário
+- [ X ] `/api/posts/[postId]/like` - Curtir post
+- [ X ] `/api/posts/[postId]/dislike` - Não curtir post
+- [ X ] `/api/posts/[postId]/favorite` - Favoritar post
+- [ X ] `/api/posts/[postId]/save` - Salvar post
+- [ X ] `/api/posts/[postId]/share` - Compartilhar post
+- [ X ] `/api/posts/[postId]/view` - Registrar visualização
+- [ X ] `/api/posts/[postId]/comments` - Comentários do post
+- [ X ] `/api/posts/[postId]/embed` - Dados para embed
+- [ X ] `/api/posts/share` - Compartilhar post (externo)
+- [ X ] `/api/posts/process-hashtags-mentions` - Processar hashtags e menções
+
+### Comentários
+
+- [ X ] `/api/comments/create` - Criar comentário
+- [ X ] `/api/comments/[commentId]` - Deletar comentário
+- [ X ] `/api/comments/[postId]` - Listar comentários do post
+
+### Usuários
+
+- [ X ] `/api/users/profile` - Perfil do usuário
+- [ X ] `/api/users/[userId]/stats` - Estatísticas do usuário
+- [ X ] `/api/users/[userId]/followers` - Seguidores
+- [ X ] `/api/users/[userId]/following` - Seguindo
+- [ X ] `/api/users/settings` - Configurações do usuário
+- [ X ] `/api/users/settings/theme` - Tema do usuário
+- [ X ] `/api/users/suggestions` - Sugestões de usuários
+- [ X ] `/api/users/block` - Bloquear usuário
+- [ X ] `/api/users/blocked` - Listar usuários bloqueados
+- [ X ] `/api/users/mute` - Silenciar usuário
+- [ X ] `/api/users/muted` - Listar usuários silenciados
+- [ X ] `/api/users/feed-preferences` - Preferências do feed
+- [ X ] `/api/users/data-export` - Exportar dados (LGPD)
+- [ X ] `/api/users/username/[username]` - Buscar por username
+- [ X ] `/api/users/username/[username]/check` - Verificar disponibilidade
+
+### Seguir/Seguidores
+
+- [ X ] `/api/follow/[userId]` - Seguir/deixar de seguir
+- [ X ] `/api/follow/[userId]/status` - Status de seguimento
+
+### Mensagens
+
+- [ X ] `/api/messages/send` - Enviar mensagem
+- [ X ] `/api/messages/conversations` - Listar conversas
+- [ X ] `/api/messages/[userId]` - Mensagens com usuário
+
+### Notificações
+
+- [ X ] `/api/notifications` - Listar notificações
+- [ X ] `/api/notifications/unread-count` - Contador de não lidas
+- [ X ] `/api/notifications/mark-all-read` - Marcar todas como lidas
+- [ X ] `/api/notifications/[notificationId]` - Gerenciar notificação
+
+### Hashtags
+
+- [ X ] `/api/hashtags/[hashtag]` - Posts por hashtag
+- [ X ] `/api/hashtags/trending` - Hashtags em alta
+
+### Coleções
+
+- [ X ] `/api/collections` - Criar/listar coleções
+- [ X ] `/api/collections/[collectionId]` - Gerenciar coleção
+- [ X ] `/api/collections/[collectionId]/posts` - Posts da coleção
+
+### Busca
+
+- [ X ] `/api/search` - Busca unificada (posts, usuários, hashtags)
+
+### Storage
+
+- [ X ] `/api/storage/upload` - Upload de arquivo
+- [ X ] `/api/storage/upload-signup` - Upload no signup
+- [ X ] `/api/storage/list` - Listar arquivos
+- [ X ] `/api/storage/delete` - Deletar arquivo
+- [ X ] `/api/storage/move` - Mover arquivo
+
+### Resend (Email)
+
+- [ X ] `/api/resend/domains` - Gerenciar domínios
+- [ X ] `/api/resend/domains/[id]` - Gerenciar domínio específico
+- [ X ] `/api/resend/domains/[id]/verify` - Verificar domínio
+- [ X ] `/api/resend/domains/verified` - Listar domínios verificados
 
 ## 🎨 Temas e Cores
 
@@ -490,10 +629,14 @@
   - API `/api/messages/send` - Enviar mensagem
   - API `/api/messages/conversations` - Listar conversas
   - API `/api/messages/[userId]` - Buscar mensagens
+  - Página de mensagens (/messages) ✅
+  - Página de conversa individual (/messages/[userId]) ✅
   - Sistema de leitura/não lida
   - Agrupamento automático por conversa
+  - Contador de mensagens não lidas
 - [ ] Chat em tempo real ⚠️
   - APIs de mensagens prontas ✅
+  - Páginas de mensagens implementadas ✅
   - Falta: Integração com Supabase Realtime (subscriptions)
 - [x] Compartilhamento para redes sociais externas ✅
   - API `/api/posts/share` - Compartilhar post
@@ -516,11 +659,30 @@
 - [x] Progress bar para uploads ✅
 - [x] Preview antes de publicar ✅
 - [x] Suporte para GIFs animados ✅
-- [ ] Stories temporárias (24h)
+- [x] Stories temporárias (24h) ✅
+  - Tabela `stories` criada com expiração automática de 24h
+  - Tabela `story_views` para rastrear visualizações
+  - API `/api/stories/create` - Criar story
+  - API `/api/stories` - Listar stories ativas
+  - API `/api/stories/[storyId]/view` - Registrar visualização
+  - API `/api/stories/[storyId]` - Deletar story
+  - API `/api/stories/cleanup` - Limpar stories expiradas (cron job)
+  - Componente `StoriesBar` - Barra de stories no feed
+  - Componente `StoriesViewer` - Visualizador de stories em tela cheia
+  - Página `/stories/create` - Criar nova story
+  - Página `/stories/[userId]` - Visualizar stories do usuário
+  - Suporte para imagens e vídeos
+  - Progress bar animada por story (5s imagem, 10s vídeo)
+  - Navegação entre stories (anterior/próximo)
+  - Indicador de stories não visualizadas
+  - Expiração automática após 24 horas
+  - Integração no feed principal
 
 ### 🔍 Busca e Descoberta
 
 - [x] Busca por hashtags ✅
+- [x] Página de hashtag (/hashtag/[hashtag]) ✅
+- [x] Contagem de posts por hashtag ✅
 - [ ] Busca por localização
 - [x] Sugestões de usuários para seguir ✅
 - [x] Posts populares ✅
@@ -546,7 +708,11 @@
 - [x] Bloqueio de usuários ✅
 - [x] Silenciar usuários ✅
 - [x] Notificações personalizáveis ✅
-- [x] Tema claro/escuro toggle ✅
+- [x] Tema claro/escuro/sistema toggle ✅
+- [x] Página de configurações completa (/settings) ✅
+- [x] Página de usuários bloqueados (/settings/blocked) ✅
+- [x] Página de usuários silenciados (/settings/muted) ✅
+- [x] Página de sessões ativas (/settings/sessions) ✅
 - [ ] Idioma (i18n)
 - [ ] Preferências de conteúdo
 - [x] Download de dados (LGPD) ✅
@@ -689,7 +855,11 @@
 ### 🏷️ Organização
 
 - [ ] Tags personalizadas
-- [ ] Coleções de posts
+- [x] Coleções de posts ✅
+  - API `/api/collections` - Criar/listar coleções
+  - API `/api/collections/[collectionId]` - Gerenciar coleção
+  - API `/api/collections/[collectionId]/posts` - Posts da coleção
+  - Componente `CollectionSelectorModal` ✅
 - [ ] Pastas para posts salvos
 - [ ] Organização por data
 - [ ] Busca em posts salvos
@@ -788,17 +958,20 @@
 
 ### 💾 Banco de Dados
 
-- [ ] Banco de dados real (PostgreSQL/MongoDB)
+- [x] Banco de dados real (Supabase PostgreSQL) ✅
+- [x] Migrations (16 arquivos SQL) ✅
 - [ ] Cache (Redis)
 - [ ] Search engine (Elasticsearch)
 - [ ] CDN para mídia
 - [ ] Backup automático
-- [ ] Migrations
 
 ### 🔄 Real-time
 
 - [ ] WebSockets
-- [ ] Notificações em tempo real
+- [x] Notificações em tempo real (preparado, falta ativar Realtime) ⚠️
+  - Hook `useNotifications` com suporte a realtime ✅
+  - Estrutura de subscriptions preparada ✅
+  - Falta: Ativar Realtime no Supabase
 - [ ] Chat em tempo real
 - [ ] Atualizações live
 - [ ] Presença online
@@ -822,7 +995,9 @@
 
 ---
 
-**Total de itens verificados:** 200+
+**Total de itens verificados:** 250+
+
+**APIs implementadas:** 70+
 
 **Sugestões de implementação:** 100+
 
@@ -849,5 +1024,10 @@
 - ✅ Toggle de tema claro/escuro/sistema
 - ✅ Notificações personalizáveis
 - ✅ Download de dados pessoais (LGPD)
+- ✅ Páginas de autenticação (forgot password, reset password, verify email)
+- ✅ Sistema de mensagens diretas (DM) com páginas
+- ✅ Página de hashtag individual
+- ✅ Sistema de coleções de posts
+- ✅ Páginas de configurações (blocked, muted, sessions)
 
-**Última atualização:** 2025-01-26
+**Última atualização:** 2025-01-27

@@ -3,6 +3,13 @@ import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/contexts/theme-context";
+import { ToastProvider } from "@/contexts/toast-context";
+import { FontLoader } from "@/components/shared/font-loader";
+import { OfflineIndicator } from "@/components/shared/offline-indicator";
+import { ServiceWorkerRegister } from "@/components/shared/service-worker-register";
+import { SWUpdateNotification } from "@/components/shared/sw-update-notification";
+import { QueryProvider } from "@/lib/providers/query-provider";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,7 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Echo88 - Bem-vindo",
+  title: "Aivlo",
   description: "Plataforma de autenticação e cadastro",
   other: {
     "google-adsense-account": "ca-pub-3354164597487551",
@@ -33,6 +40,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <FontLoader />
         {/* Google AdSense Script */}
         <Script
           async
@@ -41,7 +49,18 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <ErrorBoundary>
+            <QueryProvider>
+              <AuthProvider>
+                <ToastProvider>
+                  <ServiceWorkerRegister />
+                  <SWUpdateNotification />
+                  <OfflineIndicator />
+                  {children}
+                </ToastProvider>
+              </AuthProvider>
+            </QueryProvider>
+          </ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>

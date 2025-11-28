@@ -1,6 +1,39 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Video Player Slider Styles */
+.slider-thumb::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.slider-thumb::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.slider-thumb::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.slider-thumb::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -119,6 +152,65 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Font Classes */
+.font-inter {
+  font-family: "Inter", sans-serif;
+}
+
+.font-roboto {
+  font-family: "Roboto", sans-serif;
+}
+
+.font-poppins {
+  font-family: "Poppins", sans-serif;
+}
+
+.font-montserrat {
+  font-family: "Montserrat", sans-serif;
+}
+
+.font-open-sans {
+  font-family: "Open Sans", sans-serif;
+}
+
+.font-lato {
+  font-family: "Lato", sans-serif;
+}
+
+.font-raleway {
+  font-family: "Raleway", sans-serif;
+}
+
+/* Profile Customization Styles */
+[data-profile-theme] {
+  --profile-theme-color: var(--profile-theme, hsl(var(--primary)));
+  --profile-accent-color: var(--profile-accent, hsl(var(--accent)));
+}
+
+[data-profile-theme] .profile-theme-element {
+  color: var(--profile-theme-color);
+}
+
+[data-profile-theme] .profile-accent-element {
+  color: var(--profile-accent-color);
+}
+
+[data-profile-theme] .profile-theme-bg {
+  background-color: var(--profile-theme-color);
+}
+
+[data-profile-theme] .profile-accent-bg {
+  background-color: var(--profile-accent-color);
+}
+
+[data-profile-theme] .profile-theme-border {
+  border-color: var(--profile-theme-color);
+}
+
+[data-profile-theme] .profile-accent-border {
+  border-color: var(--profile-accent-color);
 }
 
 /* Custom scrollbar for modal */

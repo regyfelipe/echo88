@@ -11,8 +11,17 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
 
     if (session) {
-      // Remove sessão do banco de dados
-      await removeSession(session.userId, session.sessionId);
+      // Remove sessão do banco de dados usando deviceId se disponível
+      // O sessionId do token é um hash, mas precisamos usar deviceId para buscar a sessão
+      const identifier = session.deviceId || session.sessionId;
+      if (identifier) {
+        try {
+          await removeSession(session.userId, identifier);
+        } catch (error) {
+          // Se falhar, continua com o logout mesmo assim (remove cookies)
+          console.error("Error removing session from database:", error);
+        }
+      }
     }
 
     // Remove cookies
@@ -21,6 +30,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Logout realizado com sucesso" });
   } catch (error) {
     console.error("Logout error:", error);
+    // Mesmo com erro, tenta remover cookies
+    try {
+      await deleteSession();
+    } catch {}
     return NextResponse.json(
       { error: "Erro ao fazer logout" },
       { status: 500 }

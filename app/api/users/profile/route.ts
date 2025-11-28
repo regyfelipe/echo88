@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
 
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, username, full_name, avatar_url, email, bio")
+      .select(
+        "id, username, full_name, avatar_url, email, bio, cover_image_url, theme_color, custom_font, layout_style, accent_color, custom_emoji"
+      )
       .eq("id", session.userId)
       .single();
 
@@ -33,9 +35,16 @@ export async function GET(request: NextRequest) {
       avatar: user.avatar_url || null,
       email: user.email,
       bio: user.bio || null,
+      coverImage: user.cover_image_url || null,
+      themeColor: user.theme_color || null,
+      customFont: user.custom_font || null,
+      layoutStyle: user.layout_style || "default",
+      accentColor: user.accent_color || null,
+      customEmoji: user.custom_emoji || null,
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     console.error("Error in profile route:", error);
     return NextResponse.json(
       { error: "Internal server error", details: errorMessage },
@@ -53,7 +62,18 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username, fullName, bio, avatarUrl } = body;
+    const {
+      username,
+      fullName,
+      bio,
+      avatarUrl,
+      coverImageUrl,
+      themeColor,
+      customFont,
+      layoutStyle,
+      accentColor,
+      customEmoji,
+    } = body;
 
     const supabase = createAdminClient();
 
@@ -79,6 +99,12 @@ export async function PATCH(request: NextRequest) {
       full_name?: string;
       bio?: string | null;
       avatar_url?: string | null;
+      cover_image_url?: string | null;
+      theme_color?: string | null;
+      custom_font?: string | null;
+      layout_style?: string;
+      accent_color?: string | null;
+      custom_emoji?: string | null;
     }
     const updateData: UpdateData = {};
 
@@ -94,6 +120,27 @@ export async function PATCH(request: NextRequest) {
     if (avatarUrl !== undefined) {
       updateData.avatar_url = avatarUrl || null;
     }
+    if (coverImageUrl !== undefined) {
+      updateData.cover_image_url = coverImageUrl || null;
+    }
+    if (themeColor !== undefined) {
+      updateData.theme_color = themeColor?.trim() || null;
+    }
+    if (customFont !== undefined) {
+      updateData.custom_font = customFont?.trim() || null;
+    }
+    if (
+      layoutStyle !== undefined &&
+      ["default", "compact", "spacious", "minimal"].includes(layoutStyle)
+    ) {
+      updateData.layout_style = layoutStyle;
+    }
+    if (accentColor !== undefined) {
+      updateData.accent_color = accentColor?.trim() || null;
+    }
+    if (customEmoji !== undefined) {
+      updateData.custom_emoji = customEmoji?.trim() || null;
+    }
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
@@ -106,7 +153,9 @@ export async function PATCH(request: NextRequest) {
       .from("users")
       .update(updateData)
       .eq("id", session.userId)
-      .select("id, username, full_name, avatar_url, email, bio")
+      .select(
+        "id, username, full_name, avatar_url, email, bio, cover_image_url, theme_color, custom_font, layout_style, accent_color, custom_emoji"
+      )
       .single();
 
     if (error) {
@@ -126,10 +175,17 @@ export async function PATCH(request: NextRequest) {
         avatar: updatedUser.avatar_url || null,
         email: updatedUser.email,
         bio: updatedUser.bio || null,
+        coverImage: updatedUser.cover_image_url || null,
+        themeColor: updatedUser.theme_color || null,
+        customFont: updatedUser.custom_font || null,
+        layoutStyle: updatedUser.layout_style || "default",
+        accentColor: updatedUser.accent_color || null,
+        customEmoji: updatedUser.custom_emoji || null,
       },
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     console.error("Error in profile route:", error);
     return NextResponse.json(
       { error: "Internal server error", details: errorMessage },

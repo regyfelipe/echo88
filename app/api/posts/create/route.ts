@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { uploadFile, validateFileType } from "@/lib/storage/upload";
+import { withSecurity } from "@/lib/security/request-wrapper";
+import { createPostSchema, z } from "@/lib/validation/schemas";
+import { validate } from "@/lib/validation/schemas";
 
 /**
  * POST /api/posts/create
  * Cria um novo post
  */
-export async function POST(request: NextRequest) {
+async function createPostHandler(request: NextRequest) {
   try {
     const session = await getSession();
 
@@ -25,20 +28,29 @@ export async function POST(request: NextRequest) {
     const mediaArtist = formData.get("mediaArtist") as string | null;
     const documentName = formData.get("documentName") as string | null;
 
-    // Validação básica
-    const validTypes = [
-      "text",
-      "image",
-      "video",
-      "audio",
-      "gallery",
-      "document",
-    ];
-    if (!type || !validTypes.includes(type)) {
-      return NextResponse.json(
-        { error: "Tipo de post inválido" },
-        { status: 400 }
-      );
+    // Validação com Zod
+    try {
+      validate(createPostSchema, {
+        content: content || undefined,
+        type,
+        mediaTitle: mediaTitle || undefined,
+        mediaArtist: mediaArtist || undefined,
+        documentName: documentName || undefined,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          {
+            error: "Validação falhou",
+            details: error.issues.map((e) => ({
+              field: e.path.join("."),
+              message: e.message,
+            })),
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
     }
 
     // Validação de conteúdo
@@ -219,3 +231,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Export com segurança
+export const POST = withSecurity(createPostHandler);

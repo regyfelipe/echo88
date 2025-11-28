@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface PostDetailModalProps {
+export interface PostDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   author: {
